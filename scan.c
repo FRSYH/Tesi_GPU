@@ -2,10 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "scan.h"
 #include "linalg.h"
+#include "matrix.h"
 
-void allocation(long long ***m, int *row, int *col, int *num_var, char **v, int *n, long long *module, int *max_degree, FILE *input_file){
+
+void allocation(int **matrix, int *row, int *col, int *numero_variabili, char **variabili, int *tipo_ordinamento, int *modulo, int *max_degree, FILE *input_file){
 /*
 Legge da input le seguenti informazioni:
 	- modulo dei coefficienti
@@ -13,17 +14,15 @@ Legge da input le seguenti informazioni:
 	- numero dei polinomi di partenza
 	- tipo di ordinamento
 	- variabili utilizzate nei polinomi
-
-
 con queste informazioni alloca la matrice principale (matrice che conterrà i polinomi) e stabilisce il numero di variabili utilizzate.
 */
-	fscanf(input_file, "%lli",module); //leggo il modulo
+	fscanf(input_file, "%d",modulo); //leggo il modulo
 	fgetc(input_file);
 	fscanf(input_file, "%d",max_degree); //leggo il grado massimo
 	fgetc(input_file);
 	fscanf(input_file, "%d",row);  //leggo numero dei polinomi di partenza
 	fgetc(input_file);
-	fscanf(input_file, "%d",n);  //leggo tipo di ordinamento
+	fscanf(input_file, "%d",tipo_ordinamento);  //leggo tipo di ordinamento
 	fgetc(input_file);
 
 	int i,j,k,pos_pol,num_pol;
@@ -31,28 +30,29 @@ con queste informazioni alloca la matrice principale (matrice che conterrà i po
 
 	i=0;
 	pos_pol = 0;
-	*v = malloc(sizeof(char));
+	*variabili = malloc(sizeof(char));
 	c = fgetc(input_file);
 	while( c != '\n' ){
-		(*v)[i] = c;
+		(*variabili)[i] = c;
 		i++;
-		(*num_var)++;
-		*v = realloc(*v, (i+1)*sizeof(char) );
+		(*numero_variabili)++;
+		*variabili = realloc(*variabili, (i+1)*sizeof(char) );
 		c = fgetc(input_file);
 	}
 
-	*col = monomial_combinations(*num_var, *max_degree);
-
-	*m = malloc((*row) * sizeof (long long *) );            // allocazione della matrice dei coefficienti
-	if( *m != NULL )
+	*col = monomial_combinations(*numero_variabili, *max_degree);
+	/*
+	*matrix = malloc((*row) * sizeof (int *) );            // allocazione della matrice dei coefficienti
+	if( *matrix != NULL )
 		for (int i=0; i<(*row); i++)
-			(*m)[i] = calloc((*col) , sizeof (long long) );	
-
+			(*matrix)[i] = calloc((*col) , sizeof (int) );	
+	*/
+	*matrix = (int *)calloc( (*row) * (*col), sizeof(int));
 
 }
 
 
-int parse(int num_var, char *vet, long long **m, int row, int **vet_grd, int len, long long module, int (*ord) (const void *, const void *, void*), FILE *input_file){
+int parse(int num_var, char *vet, int **m, int row, int **vet_grd, int len, int module, int (*ord) (const void *, const void *, void*), FILE *input_file){
 /*
 Esegue la lettura (parse) dei polinomi di partenza nel seguente modo.
 Si legge un monomio alla volta. 
@@ -62,9 +62,10 @@ La posizione corretta è indicata da vet_grd.
 Si leggono tutti i monomi di tutti i polinomi di partenza.
 In caso di errore di formato nell'input la funzione si interrompe restituendo segnale di errore -1.
 */
+	
 	int pos_pol = 0,i,col;
 	char c,* mon;
-	long long cof = 0;
+	int cof = 0;
 	c = fgetc(input_file);
 
 	int *grade;
@@ -106,7 +107,8 @@ In caso di errore di formato nell'input la funzione si interrompe restituendo se
  * grade: vettore in cui salvare i gradi delle variabili secondo l'ordine di vet
  * module: campo su cui è rappresentato il sistema 
  */
-int parse_mon(char * mon, int len,long long * val, int num_var, char *vet, int *grade, long long module){
+	
+int parse_mon(char * mon, int len,int * val, int num_var, char *vet, int *grade, int module){
 
 	//parsing prima del coefficiente
 	int index = 0;

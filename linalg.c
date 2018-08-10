@@ -1,6 +1,6 @@
 #include <stdlib.h>
+#include "scan.h"
 #include "matrix.h"
-#include "linalg.h"
 #include <stdio.h>
 /*
 #include <math.h>

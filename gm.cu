@@ -6,15 +6,12 @@
 #include <time.h>
 #include <omp.h>
 #include <stdbool.h>
-#include "linalg.h"
-#include "matrix.h"
-#include "scan.h"
-
+#include <time.h>
 
 //dichiarazione variabili globali
 int max_degree = 0;
-long long module = 0;
-bool verbose_flag, help_flag, version_flag, test_flag, loop_flag, verify_flag, manual_expand_flag, reduced_expand_flag, set_expand_flag, partial_gauss_flag;
+int module = 0;
+
 
 struct map_row {
 	int len;
@@ -26,112 +23,587 @@ struct map {
 	struct map_row *row;
 };
 
-
-//moltiplica la riga indicata per tutti i possibili monomi
-void moltiplica_riga(long long ***m, int *row, int col, int riga, struct map map,int * degree, int **vet, int num_var);
-
-void moltiplica_riga_forn(long long ***m, int * row, int col, int riga, struct map map,int * degree, int **vet, int num_var, int stop_degree);
-
-int init_matrix(long long **m, int row, int col,int **vet_grd, char *v, int num_var,int (*ord) (const void *, const void *, void*),FILE *input_file); //inizializza la matrice dei coefficienti
-
-//initialize the vector that keeps the number of monomial with the same grade and their position
-void init_degree_vector(int * degree, int num_var);
+//----------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------
 
 
-//return the grade of a monomial
-int grado_monomio(int posizione, int **vet, int num_var);
+void matrix_alloc_int(int ***m, int row, int col) {
+	//Allocazione di una matrice di tipo int con dimensioni indicate.	
+	*m = (int **)malloc(row * sizeof(int *));
+	if (*m != NULL)
+		for (int i = 0; i<row; i++)
+			(*m)[i] = (int *)calloc(col, sizeof(int));
+}
+
+void matrix_free_int(int ***m, int row, int col) {
+	//Deallocazione di una matrice di tipo int con dimensioni indicate.	
+	for (int i = 0; i<row; i++)
+		free((*m)[i]);
+	free(*m);
+}
+
+//copia il vettore vet2 in vet1, entrambi di lunghezza len
+void vctcpy(int *vet1, const int *vet2, int len) {
+	for (int i = 0; i < len; i++)
+		vet1[i] = vet2[i];
+	return;
+}
+
+/*funzione ricorsiva che calcola tutti i possibili monomi con n variabili e grado <= m
+e li inserisce nell'array vet. I monomi sono rappresentati come array di interi dove
+il valore di ogni posizione rappresenta il grado della variabile in quella posizione.
+Esempio: n=3, x^2*y*z = [2,1,1].
+L'array vet deve essere già allocato correttamente. Gli altri parametri sono necessari
+per la struttura ricorsiva della funzione e alla prima chiamata devono essere:
+- turn = 0, rappresenta la posizione della variabile nel monomio
+- monomial = array di interi di lunghezza n già allocato e usato per calcolare i vari monomi
+- *pos = 0 puntatore ad intero, rappresenta la prima posizione libera nell'array vet
+*/
+
+void monomial_computation_rec(int n, int m, int **vet, int turn, int *monomial, int *pos) {
+
+	//per ogni variabile provo tutti i gradi da 0 a m
+	for (int degree = 0; degree <= m; degree++) {
+		//se questa è la prima variabile azzero il monomio
+		if (turn == 0) {
+			//azzero il monomio lasciando solo il grado della prima variabile
+			monomial[0] = degree;
+			for (int v = 1; v < n; v++)
+				monomial[v] = 0;
+		}
+		//altrimenti le altre variabili aggiungo il proprio grado al monomio
+		else
+			monomial[turn] = degree;
 
 
-//restituisce un array contenente tutti i len monomi con n variabili e grado <= m
-//len è il numero di possibili monomi con n variabili e grado <= m
-int **monomial_computation(int n, int m, int len);
+		//ottengo il grado del monomio sommando i gradi delle variabili
+		int sum = 0;
+		for (int v = 0; v <= turn; v++)
+			sum += monomial[v];
+		//se il grado del monomio supera quello massimo non ha senso continuare a cercare
+		//altri monomi partendo da questo, perchè tutti avranno grado maggiore o uguale
+		if (sum > m)
+			break;
 
-//funzione ricorsiva che calcola tutti i possibili monomi con n variabili e grado <= m
-//e li inserisce nell'array vet. Chiamata da monomial_computation
-void monomial_computation_rec(int n, int m,  int **vet, int turn, int *monomial, int *pos);
+		//se questa è l'ultima variabile copia il monomio nell'array vet and incrementa l'indice pos
+		if (turn == (n - 1)) {
+			vctcpy(vet[(*pos)], monomial, n);
+			(*pos)++;
+		}
+		//altrimenti richiama se stessa cambiando la variabile (turn)
+		else
+			monomial_computation_rec(n, m, vet, turn + 1, monomial, pos);
+	}
 
-//mappa tutte le possibili moltiplicazioni dei monomi di n variabili e grado <= m
-//dell'array vet di lunghezza len, nella matrice map[len][len]. compar è la funzione
-//secondo cui vet è ordinato.
-void setup_map(int **map, int **vet, int len, int n, int m, int (*compar) (const void *, const void *, void*));
+	return;
+}
 
-void setup_struct_map(struct map *map, int **vet, int len, int n, int m, int (*compar) (const void *, const void *, void*));
+/*restituisce un array contenente tutti i len monomi con n variabili e grado <= m
+len è il numero di possibili monomi con n variabili e grado <= m
+i monomi sono array di interi di lunghezza n dove il valore di ogni posizione rappresenta
+il grado della variabile in quella posizione. Esempio: n=3, x^2*y*z = [2,1,1]
+len viene passato come argomento per evitare di ricalcolarlo internamente
+*/
+int **monomial_computation(int n, int m, int len) {
 
-void print_struct_map(struct map map, FILE *output_file);
+	int **vet, *monomial;
 
-void free_struct_map(struct map *map);
+	//alloco la memoria per l'array
+	matrix_alloc_int(&vet,len,n);
 
-//multiply the entire matrix for all possible correct monomial
-void moltiplica_matrice(long long ***m, int *row, int col, struct map map, int *degree, int **vet, int num_var, int start);
+	//strutture di supporto necessarie per il calcolo
+	monomial = (int *)malloc(n * sizeof(int));
+	int pos = 0;
 
-//compute the different degree of the matrix rows
-void matrix_degree(long long **m, int row, int col, int *m_deg, int **vet, int num_var);
+	//il calcolo è fatto dalla funzione ricorsiva correttemente parametrizzata
+	monomial_computation_rec(n, m, vet, 0, monomial, &pos);
 
-//formatted print of matrix degree
-void print_matrix_degree(int *m_deg, FILE *output_file);
+	free(monomial);
 
-//funzione di confronto gli array rowA con rowB, scorrendo gli elementi da destra a sinistra
-//restituisce 1 se rowA > rowB, -1 se rowB > rowA, 0 altrimenti. Compatibile con qsort_r
-int compare_arrays(const void *rowA, const void *rowB, void *columns);
+	return vet;
+}
 
-//funzione che prende un vettore vet contenente length vettori di lunghezza (max_deg+1)
-//retituisce il numero di cicli di fila partendo dal fondo di vet
-int find_finishing_cycle(int **vet, int length, int max_deg);
 
-//compare the matrix degree with the target degree wich are {0,1,2,3,4,5...max_degree} return 0 if equal -1 if not
-int target_degree(int *v);
+//calcola il fattoriale di n (se n è negativo return -1)
+long long factorial(int n) {
+	long long k;
 
-void partial_gauss(long long **m, int row, int col, int num_var, FILE *output_file);
+	if (n<0) //se n è negativo non esiste il fattoriale
+	{
+		return -1; //codice di errore
+	}
+	else { //altrimenti calcolo il fattoriale
 
-int compare_arrays(const void *rowA, const void *rowB, void *columns);
+		if (n == 0 || n == 1) {
+			return 1;
+		}
+		else {
+			k = 1;
+			for (int i = 2; i <= n; i++) {
+				k *= i;
+			}
+			return k;
+		}
+	}
+}
 
-void set_expansion_degree(int *expansion_degree,int *m_deg);
 
-void execute_eliminazione(long long ***m, int * d_row, int col, struct map map, int *degree, int **vet, int num_var, int n_loops, int expansion, FILE *output_file);
+//restituisce il numero di possibili monomi con n variabili e grado = m
+int combination(int n, int m) {
 
-void execute_confronto(long long ***m, int * d_row, int col, struct map map, int *degree, int **vet, int num_var, int n_loops, int expansion, FILE *output_file);
+	long long num, den;
+	//calcolo {(m+n-1)! / m!*(n-1)!}
 
-void execute_standard(long long ***m, int * d_row, int col, struct map map, int *degree, int **vet, int num_var, int n_loops, int expansion, FILE *output_file);
+	//se n>=m semplificato a {(j+n-1)*(j+n-2)* ... *(n) / j!}
+	if (n >= m) {
+		num = 1;
+		for (int k = m; k > 0; k--)
+			num = num * (n + k - 1);
+		den = factorial(m);
+	}
+	//se m>n semplificato a {(j+n-1)*(j+n-2)* ... *(j) / (n-1)!}
+	else {
+		num = 1;
+		for (int k = n; k > 1; k--)
+			num = num * (m + k - 1);
+		den = factorial(n - 1);
+	}
+	return (num / den);
+}
 
-void verifica_correttezza(long long **m, int row, int col, struct map map, int *degree, int **vet, int num_var, int n_loops, int expansion, FILE *output_file, int ex1, int ex2);
+//restituisce il numero di tutti i possibili monomi con n variabili e grado <= m
+int monomial_combinations(int n, int m) {
 
-void print_incognite(long long **m, int row, int col, int num_var, int **vet, FILE *output_file);
+	int result = 0;
+	//result = Sommatoria (per j da 1 a m) {(j+n-1)! / j!*(n-1)!}
+	for (int j = 0; j <= m; j++)
+		result += combination(n, j);
+	return  result;
+}
 
+void allocation(int **matrix, int *row, int *col, int *numero_variabili, char **variabili, int *tipo_ordinamento, int *modulo, int *max_degree, FILE *input_file) {
+	/*
+	Legge da input le seguenti informazioni:
+	- modulo dei coefficienti
+	- grado massimo
+	- numero dei polinomi di partenza
+	- tipo di ordinamento
+	- variabili utilizzate nei polinomi
+	con queste informazioni alloca la matrice principale (matrice che conterrà i polinomi) e stabilisce il numero di variabili utilizzate.
+	*/
+	fscanf(input_file, "%d", modulo); //leggo il modulo
+	fgetc(input_file);
+	fscanf(input_file, "%d", max_degree); //leggo il grado massimo
+	fgetc(input_file);
+	fscanf(input_file, "%d", row);  //leggo numero dei polinomi di partenza
+	fgetc(input_file);
+	fscanf(input_file, "%d", tipo_ordinamento);  //leggo tipo di ordinamento
+	fgetc(input_file);
+
+	int i, j, k, pos_pol, num_pol;
+	char c;
+
+	i = 0;
+	pos_pol = 0;
+	*variabili = (char *)malloc(sizeof(char));
+	c = fgetc(input_file);
+	while (c != '\n') {
+		(*variabili)[i] = c;
+		i++;
+		(*numero_variabili)++;
+		*variabili = (char *)realloc(*variabili, (i + 1) * sizeof(char));
+		c = fgetc(input_file);
+	}
+
+	*col = monomial_combinations(*numero_variabili, *max_degree);
+	/*
+	*matrix = malloc((*row) * sizeof (int *) );            // allocazione della matrice dei coefficienti
+	if( *matrix != NULL )
+	for (int i=0; i<(*row); i++)
+	(*matrix)[i] = calloc((*col) , sizeof (int) );
+	*/
+	*matrix = (int *)calloc((*row) * (*col), sizeof(int));
+
+}
+
+
+void print_matrix(int *matrix, int row, int col, FILE *output_file) {
+	for (int x = 0; x < row; x++) {
+		for (int y = 0; y < col; y++) {
+			fprintf(output_file, "%d ", matrix[ (x*col) + y]);
+		}
+		fprintf(output_file, "\n\n\n");
+	}
+	fprintf(output_file, "\n");
+}
+
+//confronta due monomi di *arg variabili secondo l'ordinamento grevlex
+//restituisce un intero positivo se monom1 > monom2, zero se sono uguali, uno negativo altrimenti
+//i monomi sono sempre rappresentati come array di lunghezza pari al numero delle variabili
+//sono fatti diversi cast perchè il tipo degli argomenti sia compatibile con qsort_r
+int grevlex_comparison(const void *monom1, const void *monom2, void *arg) {
+
+	int degree1 = 0, degree2 = 0, n, *mon1, *mon2;
+	n = *((int *)arg);
+	mon1 = *((int **)monom1);
+	mon2 = *((int **)monom2);
+
+	//calcolo i gradi dei monomi
+	for (int v = 0; v < n; v++) {
+		degree1 += mon1[v];
+		degree2 += mon2[v];
+	}
+	if (degree1 > degree2)
+		return 1;
+	else if (degree1 < degree2)
+		return -1;
+	//se il grado è uguale guardo l'utlima cifra non nulla
+	//del array risultante dalla sottrazione dei monomi
+	else {
+		int *temp = (int *)malloc(n * sizeof(int));
+		int result;
+		for (int v = 0; v < n; v++)
+			temp[v] = mon1[v] - mon2[v];
+		for (int v = (n - 1); v >= 0; v--) {
+			if (temp[v] != 0) {
+				result = -temp[v];
+				free(temp);
+				//per evitare di fare free due volte sul  puntatore lo setto a NULL dopo la free
+				temp = NULL;
+				return result;
+			}
+		}
+		free(temp);
+	}
+	return 0;
+}
+
+//confronta due monomi di *arg variabili secondo l'ordinamento grevlex
+//restituisce un intero positivo se monom1 > monom2, zero se sono uguali, uno negativo altrimenti
+//i monomi sono sempre rappresentati come array di lunghezza pari al numero delle variabili
+//sono fatti diversi cast perchè il tipo degli argomenti sia compatibile con qsort_r
+int grevlex_comparison_mcvs(void *arg, const void *monom1, const void *monom2) {
+
+	int degree1 = 0, degree2 = 0, n, *mon1, *mon2;
+	n = *((int *)arg);
+	mon1 = *((int **)monom1);
+	mon2 = *((int **)monom2);
+
+	//calcolo i gradi dei monomi
+	for (int v = 0; v < n; v++) {
+		degree1 += mon1[v];
+		degree2 += mon2[v];
+	}
+	if (degree1 > degree2)
+		return 1;
+	else if (degree1 < degree2)
+		return -1;
+	//se il grado è uguale guardo l'utlima cifra non nulla
+	//del array risultante dalla sottrazione dei monomi
+	else {
+		int *temp = (int *)malloc(n * sizeof(int));
+		int result;
+		for (int v = 0; v < n; v++)
+			temp[v] = mon1[v] - mon2[v];
+		for (int v = (n - 1); v >= 0; v--) {
+			if (temp[v] != 0) {
+				result = -temp[v];
+				free(temp);
+				//per evitare di fare free due volte sul  puntatore lo setto a NULL dopo la free
+				temp = NULL;
+				return result;
+			}
+		}
+		free(temp);
+	}
+	return 0;
+}
+
+int order(int(**ord) (void*, const void *, const void *), int n) {
+	//inizializza il puntatore ord alla funzione di ordinamento adeguata. Il numero n indica quale funzione scegliere.
+
+	switch (n) {
+
+	case 0:
+		*ord = grevlex_comparison_mcvs;
+		return 0;
+		break;
+
+	default:
+		return -1;
+		break;
+
+	}
+}
+
+
+//n mod p 
+//Riduzione di n in modulo p.
+long long mod(long long n, long long p) {
+	long long v = n, x = 0;
+
+	if (v >= p) {
+		v = n % p;
+	}
+	else {
+		if (v < 0) {
+			x = n / p;
+			v = n - (x*p);
+			v += p;
+		}
+	}
+	return v;
+}
+
+
+//https://git.devuan.org/jaretcantu/eudev/commit/a9e12476ed32256690eb801099c41526834b6390
+//mancante nella stdlib, controparte di qsort_r
+//effettua una ricerca binaria di key nell'array base di lunghezza nmemb i cui elementi
+//hanno dimensione size, e restituisce un puntatore all'elemento uguale a key se c'è, altrimenti NULL.
+//compar è la funzione di ordinamento con cui viene confrontato key con base
+//arg è il terzo argomento di compar
+void *bsearch_r(const void *key, const void *base, size_t nmemb, size_t size,
+	int(*compar) (void *, const void *, const void *),
+	void *arg) {
+	size_t l, u, idx;
+	const void *p;
+	int comparison;
+
+	l = 0;
+	u = nmemb;
+	while (l < u) {
+		idx = (l + u) / 2;
+		p = (void *)(((const char *)base) + (idx * size));
+		comparison = compar(arg, key, p);
+		if (comparison < 0)
+			u = idx;
+		else if (comparison > 0)
+			l = idx + 1;
+		else
+			return (void *)p;
+	}
+	return NULL;
+}
+
+
+
+/* mon: stringa che rappresenta un monomio (non c'è carattere terminazione stringa)
+* len: numero di caratteri in mon
+* val: variabile in cui salvare il coefficiente del monomio
+* num_var: numero di variabili nel sistema
+* vet: vettore di caratteri in cui ogni carattere è una variabile (letto precedentemente da input)
+* grade: vettore in cui salvare i gradi delle variabili secondo l'ordine di vet
+* module: campo su cui è rappresentato il sistema
+*/
+
+int parse_mon(char * mon, int len, int * val, int num_var, char *vet, int *grade, int module) {
+
+	//parsing prima del coefficiente
+	int index = 0;
+	//se il primo carattere è una lettera (variabile) il coefficiente è 1
+	if (isalpha(mon[index]))
+		*val = 1;
+	//altrimenti leggo il coefficiente
+	else {
+		//se non è nè lettera nè cifra il formato input è sbagliato
+		if (!isdigit(mon[index]))
+			return -1;
+
+		char *coefficient = (char *)malloc(sizeof(char));
+		while (index < len && isdigit(mon[index])) {
+			coefficient = (char *)realloc(coefficient, (index + 1) * sizeof(char));
+			coefficient[index] = mon[index];
+			index++;
+		}
+		//aggiungo il carattere di temrinazione
+		coefficient = (char *)realloc(coefficient, (index + 1) * sizeof(char));
+		coefficient[index] = '\0';
+		//traduco il coefficiente in valore numerico e calcolo il modulo
+		*val = mod(atoll(coefficient), module);
+		free(coefficient);
+	}
+
+	//assumo grado zero di ogni variabile, aggiornato in seguito
+	for (int k = 0; k < num_var; k++)
+		grade[k] = 0;
+
+	//parsing delle incognite
+	char variable;
+	int variable_degree;
+	int variable_index;
+	int exponent_index;
+	char *exponent;
+
+	while (index < len) {
+		variable_index = -1;
+		variable_degree = 0;
+
+		//salto il moltiplicatore
+		if (mon[index] == '*' || mon[index] == ' ')
+			index++;
+		//leggo la variabile
+		if (index < len && isalpha(mon[index])) {
+			variable = mon[index];
+
+			//cerco la posizione della variabile in vet
+			for (int i = 0; i < num_var; i++)
+				if (vet[i] == mon[index]) {
+					variable_index = i;
+					//se è presente ha almeno grado 1
+					variable_degree = 1;
+					break;
+				}
+			//se non trovo la variabile in vet segnalo errore
+			if (variable_index == -1)
+				return -1;
+			index++;
+		}
+
+		//se c'è il carattere dell'elevato leggo l'esponente
+		if (index < len && mon[index] == '^') {
+			index++;
+			exponent_index = 0;
+			//se non è una cifra segnalo errore
+			if (index > len || !isdigit(mon[index]))
+				return -1;
+			exponent = (char *)malloc(sizeof(char));
+			while (index < len && isdigit(mon[index])) {
+				exponent = (char *)realloc(exponent, (exponent_index + 1) * sizeof(char));
+				exponent[exponent_index] = mon[index];
+				exponent_index++;
+				index++;
+			}
+			//metto il carattere di terminazoine stringa
+			exponent = (char *)realloc(exponent, (exponent_index + 1) * sizeof(char));
+			exponent[exponent_index] = '\0';
+			//leggo l'esponente
+			variable_degree = atoi(exponent);
+			free(exponent);
+		}
+		//se c'è la variabile	
+		if (variable_index != -1)
+			//metto in grade il grado della variabile nella posizione corretta
+			grade[variable_index] = variable_degree;
+	}
+	return 0;
+}
+
+
+
+int parse(int numero_variabili, char *variabili, int *matrix, int row, int **monomi, int len, int module, int(*ord) (void*, const void *, const void *), FILE *input_file) {
+	/*
+	Esegue la lettura (parse) dei polinomi di partenza nel seguente modo.
+	Si legge un monomio alla volta.
+	Il monomio viene scomposta dalla funzione parse_mon.
+	Si inserisce il coefficiente del monomio nella matrice principale (matrice dei coefficienti) nella posizione corretta.
+	La posizione corretta è indicata da vet_grd.
+	Si leggono tutti i monomi di tutti i polinomi di partenza.
+	In caso di errore di formato nell'input la funzione si interrompe restituendo segnale di errore -1.
+	*/
+
+	int pos_pol = 0, i, col;
+	char c, *mon;
+	int cof = 0;
+	c = fgetc(input_file);
+	int linear_index = 0;
+	int *grade;
+
+	//finchè non termino il file o non ho terminato il numero di polinomi dichiarati
+	while (c != EOF && pos_pol < row) {
+		mon = (char *)malloc(sizeof(char));
+		grade = (int *)calloc(numero_variabili, sizeof(int));
+		i = 0;
+		while (c != '+' && c != EOF && c != '\n') {
+			mon = (char *)realloc(mon, (i + 1) * sizeof(char));
+			mon[i] = c;
+			i++;
+			c = fgetc(input_file);
+		}
+		//se non ho salvato niente in mon (i = 0) non faccio il parsing
+		if (i != 0 && parse_mon(mon, i, &cof, numero_variabili, variabili, grade, module) == -1) {
+			return -1;
+		}
+		//inserire monomio in posizione corretta
+	
+		col = int((int **)(bsearch_r((void *)&grade, (void *)monomi, len, (sizeof(int*)), ord, &numero_variabili)) - monomi);
+		linear_index = (pos_pol * len) + col;
+		matrix[linear_index] = cof;
+		if (c == '\n') {
+			pos_pol++;
+		}
+		free(mon);
+		free(grade);
+		c = fgetc(input_file);
+		cof = 0;
+	}
+	return 0;
+}
+
+int init_matrix(int *matrix, int row, int col, int **vet_grd, char *variabili, int num_var, int(*ord) (void*, const void *, const void *), FILE *input_file) {
+	//Inizializza la matrice principale (dei coefficienti) con i coefficienti dei polinomi forniti come input.
+	return parse(num_var, variabili, matrix, row, vet_grd, col, module, ord, input_file);
+}
+
+void setup_struct_map(struct map *map, int **monomi, int len, int n, int m, int (*compar) (void*, const void *, const void *)  ){
+	
+	int sum, index=len;
+
+	//	inizializzo la struttura map, la mappa ha len righe.
+	map->len = len;
+	map->row = (map_row *)malloc( map->len * sizeof(struct map_row) );
+
+	//per ogni monomio in vet
+	int row, col, i, v;
+	for (row = 0; row < len; row++){
+		index = 0;
+		//dichiarati dentro per la parallelizzazione
+		int *temp = (int *)malloc(n * sizeof(int));
+		int *save = (int *)calloc(len, sizeof(int));
+		//provo a moltiplicarlo con ogni monomio in vet
+		for (col = 0; col < len; col++) {
+			sum = 0;
+			//eseguo il prodotto (sum è la somma dei gradi)
+			for (v = 0; v < n; v++) {
+				temp[v] = monomi[row][v] + monomi[col][v];
+				sum += temp[v];
+			}
+			//se il grado del prodotto > grado massimo tutti i restanti prodotti
+			//su quella riga sono > grado massimo
+			if (sum > m) {
+
+				//	a questo punto col è l'indice del primo elemento della mappa che non è possibile rappresentare, quindi la riga row ha solo col numero di celle e non len come prima.
+				index = col;
+				break;
+			}
+			//altrimenti cerco il prodotto in vet e metto l'indice in save
+			else{
+				save[col] = (int **)(bsearch_r((void *) &temp, (void *) monomi, len, (sizeof(int*)), compar, &n)) - monomi;
+			}
+		}
+
+		//	terminato il ciclo sulle colonne posso inizializzare la struttura perchè conosco tutti gli elementi da inserire	
+		//  la riga attuale ha esattamente index elementi diversi da -1, quindi la riga avrà lunghezza pari a index precedentemente calcolato
+		//  alloco la riga con un array da index elementi
+
+		map->row[row].len = index;
+		map->row[row].col = (int *)malloc( map->row[row].len * sizeof(int) );
+		//	a questo map devo copiare gli elementi generati dento alla struttura
+
+		for(i=0; i<map->row[row].len; i++)
+			map->row[row].col[i] = save[i];
+		
+		free(temp);
+		free(save);
+	}
+}
 
 int main (int argc, char *argv[]){
 
 	FILE *input_file = NULL, *output_file = NULL;
 	//inizializzo flag a false
-	verbose_flag = help_flag = version_flag = test_flag= loop_flag = verify_flag = manual_expand_flag = reduced_expand_flag = set_expand_flag = partial_gauss_flag = false;
-	//parsing delle opzioni
-	//numero cicli dei gradi di default = 30
-	//execute_standard di default
-	//verifica tra standard e confronto di default
-	//0 -> standard
-	//1 -> confronto
-	//2 -> eliminazione
-	int n_loops = 30, execute = 0, ex1 = 0, ex2 = 1, expansion = 1;
-
+	
 	for (int parsed = 1; parsed < argc; parsed++) {
-		if (!strcmp(argv[parsed], "--verbose"))
-			verbose_flag = true;
-		else if (!strcmp(argv[parsed], "--help"))
-			help_flag = true;
-		else if (!strcmp(argv[parsed], "--test"))
-			test_flag = true;
-		else if (!strcmp(argv[parsed], "--manual-expand"))
-			manual_expand_flag = true;
-		else if (!strcmp(argv[parsed], "--reduced-expand"))
-			reduced_expand_flag = true;
-		else if (!strcmp(argv[parsed], "--partial-gauss"))
-			partial_gauss_flag = true;
-		else if (!strcmp(argv[parsed], "--loops")) {
-			loop_flag = true;
-			parsed++;
-			if (atoi(argv[parsed]) > 0)
-				n_loops = atoi(argv[parsed]);
-		}
-		else if (parsed < argc && !strcmp(argv[parsed], "--input")) {
+		if (parsed < argc && !strcmp(argv[parsed], "--input")) {
 			parsed++;
 			input_file = fopen(argv[parsed], "r");
 			if (!input_file) {
@@ -147,84 +619,71 @@ int main (int argc, char *argv[]){
 				return (-1);
 			}
 		}
-		else if (parsed < argc && !strcmp(argv[parsed], "--execute")) {
-			parsed++;
-			execute = atoi(argv[parsed]);
-		}
-		else if (parsed < argc && !strcmp(argv[parsed], "--set-expand")) {
-			set_expand_flag = true;
-			parsed++;
-			if (atoi(argv[parsed]) > 0)
-				expansion = atoi(argv[parsed]);
-		}
-		else if (parsed < argc && !strcmp(argv[parsed], "--verify")) {
-			verify_flag = true;
-			parsed++;
-			ex1 = atoi(argv[parsed]);
-			parsed++;
-			ex2 = atoi(argv[parsed]);
-		}
 	}
 
-	if (help_flag) {
-		fprintf(stdout, "Per istruzioni sull'utilizzo --> https://github.com/FRSYH/Tesi\n");
-		return 0;
-	}
 
 	if (!input_file)
 		input_file = stdin;
 	if (!output_file)
 		output_file = stdout;
 
-	//inizio
-	double start_time = omp_get_wtime(), stopwatch;
 
-	int row, col, num_var,n;
-	int *d_row,**vet, len, **map;
-	long long **m;
-	char *v;
-	row = col = num_var = 0;
-	int (*ord) (const void *, const void *, void*);
+	int row, col, numero_variabili, tipo_ordinamento;
+	int *matrix;
 
+	char *variabili;
+	row = col = numero_variabili = 0;
+	int (*ord) (void*, const void *, const void *);
+	int *d_row, **map;
 	struct map smap;
 
+	clock_t start, end;
+	double elapsed = 0.0;
+	start = clock();
 
 	//alloca la matrice principale, legge da input: il modulo,massimo grado e numero variabili
-	allocation(&m,&row,&col,&num_var,&v,&n,&module,&max_degree,input_file);
-	d_row = &row;
+	allocation(&matrix, &row, &col, &numero_variabili, &variabili, &tipo_ordinamento, &module, &max_degree, input_file);
+	
+	int matrix_lentght = row * col; //numero di elementi della matrice
 
-	if( order(&ord,n) != 0 ){
+	if( order(&ord, tipo_ordinamento) != 0 ){
 		fprintf(stderr, "Ordinamento insesistente!!!\n\nTERMINAZIONE PROGRAMMA");
 		return 0;
 	}
 
-
-	int degree[max_degree+1];
-	len = col;
+	int * degree = (int *)calloc(max_degree+1, sizeof(int));
+	int numero_monomi = col;
+	int **monomi;
 
 	//crea il vettore con tutti i possibili monomi avendo num_var varaibili e max_degree come massimo grado
-	vet = monomial_computation(num_var, max_degree, len);
-
+	monomi = monomial_computation(numero_variabili, max_degree, numero_monomi);
 
 	//ordina il vettore dei monomi secondo un determinato ordinamento, ordinamento intercambiabile
-	qsort_r(vet, len, sizeof(int*), ord, &num_var);
-
+	qsort_s(monomi, numero_monomi, sizeof(int*), ord, &numero_variabili);
+		
 	//inizializzazione matrice (lettura dati input)
-	if( init_matrix(m,row,col,vet,v,num_var,ord,input_file) == -1 ){
+	if (init_matrix(matrix, row, col, monomi, variabili, numero_variabili, ord, input_file) == -1) {
 		fprintf(stderr, "Errore di input !!!\n\nTERMINAZIONE PROGRAMMA"); //se l'input è in formato scorrettro abort del programma
 		return 0;
 	}
+	
+	end = clock();
+	elapsed =  ((double)(end - start)) / CLOCKS_PER_SEC;
+	fprintf(output_file, "\nInizializzazione in %f sec\n", elapsed);	
 
-	fprintf(output_file, "\nInizializzazione in %f sec\n",omp_get_wtime()-start_time);
-	stopwatch = omp_get_wtime();
-	//allocazione matrice che mappa le posizioni dei prodotti dei monomi
-	//matrix_alloc_int(&map,len,len);
-	//creazione della mappa
-	//setup_map(map, vet, len, num_var, max_degree,ord);
+	start = clock();
+	
+	setup_struct_map(&smap, monomi, numero_monomi, numero_variabili, max_degree, ord);
+	
+	end = clock();
+	elapsed =  ((double)(end - start)) / CLOCKS_PER_SEC;
+	fprintf(output_file, "\nMappa creata in %f sec,   %d x %d \n\n", elapsed, col, col);
 
-	setup_struct_map(&smap,vet, len, num_var, max_degree,ord);
 
-	fprintf(output_file, "\nMappa creata in %f sec,   %d x %d \n\n",omp_get_wtime()-stopwatch,len,len);
+	print_matrix(matrix, row, col, output_file);
+
+
+	/*
 
 
 	//RISOLUZIONE PROBLEMA
@@ -278,14 +737,18 @@ int main (int argc, char *argv[]){
 	//testing
 	if (test_flag) {fprintf(output_file, "\n%f\n", t1-t0);}
 
+	*/
+
+	free(matrix);
+
 	return 0;
 }
 
 
 
+/*
 
-
-void execute_eliminazione(long long ***m, int * d_row, int col, struct map map, int *degree, int **vet, int num_var, int n_loops, int expansion, FILE *output_file){
+void execute_eliminazione(int ***m, int * d_row, int col, struct map map, int *degree, int **vet, int num_var, int n_loops, int expansion, FILE *output_file){
 
 	//eseguo moltiplicazione e riduzione di Gauss finche non trovo soluzione
 	//non moltiplico le linee iniziali uguali a quelle dell'iterazione precedente
@@ -310,9 +773,9 @@ void execute_eliminazione(long long ***m, int * d_row, int col, struct map map, 
 	//assumo espansione normale
 	int expansion_degree = max_degree;
 
-	long long **prev = NULL;
+	int **prev = NULL;
 	int row_prev = 0, row_tot = *d_row;
-	long long **tot = NULL;
+	int **tot = NULL;
 	//tot = now
 	matrix_alloc_long(&tot, row_tot, col);
 	matrix_cpy(*m, row_tot, col, tot);
@@ -414,7 +877,7 @@ void execute_eliminazione(long long ***m, int * d_row, int col, struct map map, 
 
 
 
-void execute_confronto(long long ***m, int * d_row, int col, struct map map, int *degree, int **vet, int num_var, int n_loops, int expansion, FILE *output_file){
+void execute_confronto(int ***m, int * d_row, int col, struct map map, int *degree, int **vet, int num_var, int n_loops, int expansion, FILE *output_file){
 
 	
 	int flag,old,new,inv;
@@ -572,7 +1035,7 @@ void execute_confronto(long long ***m, int * d_row, int col, struct map map, int
 
 
 
-void execute_standard(long long ***m, int * d_row, int col, struct map map, int *degree, int **vet, int num_var, int n_loops, int expansion, FILE *output_file){
+void execute_standard(int ***m, int * d_row, int col, struct map map, int *degree, int **vet, int num_var, int n_loops, int expansion, FILE *output_file){
 
 	double start_time = omp_get_wtime(), stopwatch;
 
@@ -672,7 +1135,7 @@ void execute_standard(long long ***m, int * d_row, int col, struct map map, int 
 }
 
 
-int init_matrix(long long **m, int row, int col, int **vet_grd, char *v, int num_var, int (*ord) (const void *, const void *, void*), FILE *input_file ){
+int init_matrix(int **m, int row, int col, int **vet_grd, char *v, int num_var, int (*ord) (const void *, const void *, void*), FILE *input_file ){
 //Inizializza la matrice principale (dei coefficienti) con i coefficienti dei polinomi forniti come input.
 	return parse(num_var,v,m,row,vet_grd,col,module,ord,input_file);
 }
@@ -688,7 +1151,8 @@ La matrice aumenta il numero di righe in base a quanti prodotti devo eseguire.
 Gli ultimi due parametri servono per il calcolo del grado di un monomio.
 */
 
-void moltiplica_riga_forn(long long ***m, int * row, int col, int riga, struct map map, int * degree, int **vet, int num_var, int stop_degree){
+/*
+void moltiplica_riga_forn(int ***m, int * row, int col, int riga, struct map map, int * degree, int **vet, int num_var, int stop_degree){
 
 	int grado_massimo_riga, grado_massimo_monomio,i,j,last,new_row;
 	last = -1;
@@ -722,10 +1186,10 @@ void moltiplica_riga_forn(long long ***m, int * row, int col, int riga, struct m
 			new_row += degree[i];
 		}
 
-		*m = realloc( *m , (*row + new_row ) * sizeof (long long *));
+		*m = realloc( *m , (*row + new_row ) * sizeof (int *));
 
 		for (i=(*row); i< (*row + new_row ); i++)
-			(*m)[i] = calloc(col , sizeof (long long) );
+			(*m)[i] = calloc(col , sizeof (int) );
 
 
 		for(i=1; i<(new_row+1); i++){     								//scorre tutti i monomi per i quali posso moltiplicare
@@ -774,6 +1238,7 @@ se il grado del prodotto supera m viene messo il valore -1 nella matrice.
 compar è la funzione secondo cui vet è ordinato,
 la matrice map deve essere già correttamente allocata
 */
+/*
 void setup_map(int **map, int **vet, int len, int n, int m, int (*compar) (const void *, const void *, void*)) {
 
 	int sum, *temp = malloc(n * sizeof(int));
@@ -887,6 +1352,7 @@ i monomi sono array di interi di lunghezza n dove il valore di ogni posizione ra
 il grado della variabile in quella posizione. Esempio: n=3, x^2*y*z = [2,1,1]
 len viene passato come argomento per evitare di ricalcolarlo internamente
 */
+/*
 int **monomial_computation(int n, int m, int len) {
 
 	int **vet, *monomial;
@@ -918,6 +1384,7 @@ per la struttura ricorsiva della funzione e alla prima chiamata devono essere:
 - monomial = array di interi di lunghezza n già allocato e usato per calcolare i vari monomi
 - *pos = 0 puntatore ad intero, rappresenta la prima posizione libera nell'array vet
 */
+/*
 void monomial_computation_rec(int n, int m, int **vet, int turn, int *monomial, int *pos) {
 
 	//per ogni variabile provo tutti i gradi da 0 a m
@@ -959,7 +1426,7 @@ void monomial_computation_rec(int n, int m, int **vet, int turn, int *monomial, 
 
 
 
-void matrix_degree(long long **m, int row, int col, int *m_deg, int **vet, int num_var){
+void matrix_degree(int **m, int row, int col, int *m_deg, int **vet, int num_var){
 //m_deg è un vettore che ha lunghezza pari al grado massimo.
 //la funzione calcola i gradi dei polinomi presenti nella matrice.
 //Ogni cella del vettore m_deg rappresenta un grado, se esso compare nella matrice allora viene impostato a 1 o altrimenti.
@@ -1000,10 +1467,10 @@ void set_expansion_degree(int *expansion_degree,int *m_deg) {
 
 //esegue gauss, se richiesto, su una porzione della matrice specificata dall'utente
 //e stampa il risultato nel output_file
-void partial_gauss(long long **m, int row, int col, int num_var, FILE *output_file) {
+void partial_gauss(int **m, int row, int col, int num_var, FILE *output_file) {
 
 	char answer = 'n';
-	long long **temp;
+	int **temp;
 	int col_degree, temp_col;
 
 	fprintf(stdout, "\nSi vuole effettuare gauss su una porzione della matrice? (y/n):  ");
@@ -1135,9 +1602,9 @@ int compare_arrays(const void *rowA, const void *rowB, void *columns) {
 	return 0;
 }
 
-void verifica_correttezza(long long **m, int row, int col, struct map map, int *degree, int **vet, int num_var,int n_loops, int expansion, FILE *output_file, int ex1, int ex2){
+void verifica_correttezza(int **m, int row, int col, struct map map, int *degree, int **vet, int num_var,int n_loops, int expansion, FILE *output_file, int ex1, int ex2){
 
-	long long **m1,**m2,**m3;
+	int **m1,**m2,**m3;
 	int row1,row2,row3;
 	double start_time = omp_get_wtime(), stopwatch;
 
@@ -1220,7 +1687,7 @@ void verifica_correttezza(long long **m, int row, int col, struct map map, int *
 }
 
 
-void print_incognite(long long **m, int row, int col, int num_var, int **vet, FILE *output_file){
+void print_incognite(int **m, int row, int col, int num_var, int **vet, FILE *output_file){
 
 	int grado,last;
 
@@ -1245,3 +1712,5 @@ void print_incognite(long long **m, int row, int col, int num_var, int **vet, FI
 	}
 	fprintf(output_file, "\n");	
 }
+
+*/
