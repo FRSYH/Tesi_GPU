@@ -8,6 +8,10 @@
 #include <stdbool.h>
 #include <time.h>
 
+// compilazione nvcc gm.cu -o gm -w -Xcompiler " -openmp"
+
+
+
 //dichiarazione variabili globali
 int max_degree = 0;
 int module = 0;
@@ -216,12 +220,6 @@ void allocation(int **matrix, int *row, int *col, int *numero_variabili, char **
 	}
 
 	*col = monomial_combinations(*numero_variabili, *max_degree);
-	/*
-	*matrix = malloc((*row) * sizeof (int *) );            // allocazione della matrice dei coefficienti
-	if( *matrix != NULL )
-	for (int i=0; i<(*row); i++)
-	(*matrix)[i] = calloc((*col) , sizeof (int) );
-	*/
 	*matrix = (int *)calloc((*row) * (*col), sizeof(int));
 
 }
@@ -597,6 +595,355 @@ void setup_struct_map(struct map *map, int **monomi, int len, int n, int m, int 
 	}
 }
 
+void init_degree_vector(int *degree, int num_var){
+//inizializza il vettore degree con il numero di monomi di grado i-esimo <= del grado massimo
+	int i,j,c;
+	for(i=0; i<max_degree+1; i++){
+		c = combination(num_var,i);
+		degree[i] = c;
+	}
+}
+
+int grado_monomio(int posizione, int **vet, int num_var){
+//Calcola il grado del monomio a partire dalla posizione occupata nel vettore (ordinato) delle posizioni rispetto l'ordinamento scelto.
+//(la posizione occupata deve essere corretta).
+	int i,grado;
+	grado = 0;
+	for(i=0; i<num_var; i++){
+		grado += vet[posizione][i];
+	}
+	return grado;
+}
+
+void matrix_degree(int *m, int row, int col, int *m_deg, int **vet, int num_var){
+//m_deg è un vettore che ha lunghezza pari al grado massimo.
+//la funzione calcola i gradi dei polinomi presenti nella matrice.
+//Ogni cella del vettore m_deg rappresenta un grado, se esso compare nella matrice allora viene impostato a 1 o altrimenti.
+
+	int i,j,last,grado, linear_index = 0;
+	for(i=0; i<row; i++){
+		for(j=col-1; j>0; j--){
+			linear_index = i*col + j;
+			if( m[linear_index] != 0 ){
+				last = j;           //posizione dell'ultimo coefficiente della riga
+				break;
+			}
+		}
+		grado = grado_monomio(last, vet, num_var);
+		m_deg[grado] = 1;
+	}
+}
+
+void moltiplica_riga_forn(int **m, int *row, int col, int riga, struct map map, int * degree, int **vet, int num_var, int stop_degree){
+
+	int grado_massimo_riga, grado_massimo_monomio,i,j,last,new_row;
+	last = -1;
+	int linear_index = 0;
+	long long total_dim = 0;
+	//cerco la posizione dell'ultimo coefficiente non nullo del polinomio rappresentato nella riga.
+	for(i=col-1; i>0; i--){
+		linear_index = riga * col + i;
+		if( (*m)[linear_index] != 0 ){  //(*m)[riga][i] != 0
+			last = i;
+			break;
+		}
+	}
+	//risalgo al grado del monomio appena trovato
+	//scorro la lista delle posizioni di inizio dei monomi con lo stesso grado
+	if( last != -1 ){
+
+		grado_massimo_riga = grado_monomio(last,vet,num_var);
+
+		//calcolo il grado massimo che deve avere il monomio per cui moltiplicare
+		grado_massimo_monomio = max_degree - grado_massimo_riga;
+		// a questo punto conosco per quanti monomi devo moltiplicare e quindi
+		// conosco il numero di righe che devo aggiungere alla matrice
+		new_row = 0;
+
+		if( stop_degree != 0 ){
+			
+			if( grado_massimo_monomio > stop_degree ){
+				grado_massimo_monomio = stop_degree;
+			}
+		}
+
+		for(i=1; i<(grado_massimo_monomio+1); i++){
+			new_row += degree[i];
+		}
+
+		total_dim = (*row * col) + (new_row * col);
+		*m = (int *)realloc( *m , total_dim * sizeof(int) );
+		//azzeramento delle nuove righe
+		for(i=*row; i<*row+new_row; i++){
+			for(j=0; j<col; j++){
+				(*m)[i*col+j] = 0;
+			}
+		}
+
+		for(i=1; i<(new_row+1); i++){     								//scorre tutti i monomi per i quali posso moltiplicare
+			for(j=0; j<(last+1); j++){     								//scorre fino all'ultimo elemento della riga
+				//(*m)[*row][ map.row[i].col[j] ] = (*m)[riga][j];  				//shift nella posizione corretta indicata dalla mappa
+				linear_index = *row * col + map.row[i].col[j];
+				(*m)[linear_index] = (*m)[riga*col+j];				
+			}
+			*row = *row + 1;											//aumento del conteggio delle righe
+		}
+	}
+
+}
+
+//Scambio di due righe della matrice m.
+void swap_rows(int *m, int row, int col, int j, int i){
+	
+	int k;
+	long long tmp;
+	if( j!=i ){
+		for(k=0;k<col;k++){
+			tmp = m[i*col+k];			//m[i][k];
+			m[i*col+k] = m[j*col+k];	//m[i][k] = m[j][k];
+			m[j*col+k] = tmp;			//m[j][k] = tmp;
+		}
+	}
+}
+
+//inverso moltiplicativo di n in modulo p (con p primo).
+int invers(int n, int p){
+	int b0 = p, t, q;
+	int x0 = 0, x1 = 1;
+	if (p == 1) return 1;
+	while (n > 1) {
+		q = n / p;
+		t = p, p = (n % p), n = t;
+		t = x0, x0 = x1 - q * x0, x1 = t;
+	}
+	if (x1 < 0) x1 += b0;
+	return x1;	
+}
+
+
+// a + b mod p
+//sommatoria di a e b in modulo p
+int add_mod(int a, int b, int p){
+	return mod((a+b),p);
+}
+
+// a - b mod p
+//sottrazione di a e b in modulo p
+int sub_mod(int a, int b, int p){
+	return mod((a-b),p);
+}
+
+// a * b mod p
+//prodotto di a e b in modulo p
+int mul_mod(int a, int b, int p){
+	return mod((a*b),p);
+}
+
+
+/*  effettua la riduzione di gauss della matrice m in place
+    parametro start viene utilizzato per ottimizzare l'agloritmo:
+	- 0 effettua la normale riduzione di gauss
+	- n (con n > 0) effettua una riduzione ottimizzata saltando le prime n righe nella fase di riduzione delle righe sottostanti.
+
+	Questa ottimizzazione è possibile solo se le prime n righe sono risultato di una riduzione di gauss precedente, quindi risulta inutile ripetere l'operazione di riduzione su queste righe.
+	Il salto delle prime n righe avviene solo se nella corrente riduzione non si è effettuato swap di righe. Quando le righe trovate superano start si ritorna alla normale riduzione.
+	
+
+*/
+void gauss(int *m, int row, int col, int module, int start, int *v){
+	
+	int pivot_riga = 0,r = 0,righe_trovate = 0,i,k;
+	int s,inv,a;
+	int st,flag=0,invarianti=0,flag2=0,tmp;
+
+	if( start == 0 ){
+		flag = 1;
+	}else{
+		st = start;
+	}
+
+	for(int pivot_colonna = col-1; pivot_colonna >= 0; pivot_colonna-- ){
+		r = righe_trovate;
+		while( r < row && m[r*col+pivot_colonna] == 0 ){   //m[r][pivot_colonna]
+			r++;
+			
+		}
+		// ho trovato la prima riga con elemento non nullo in posizione r e pivot_colonna oppure non esiste nessuna riga con elemento non nullo in posizione pivot_colonna
+		
+		if( r < row ){ //significa che ho trovato un valore non nullo
+			if( r != righe_trovate ){
+				swap_rows(m,row,col,righe_trovate,r); //sposto la riga appena trovata nella posizone corretta
+				flag = 1;
+				if( v != NULL ){
+					tmp = v[righe_trovate];
+					v[righe_trovate] = v[r];
+					v[r] = tmp;
+				}				
+			}			
+			pivot_riga = righe_trovate;
+			righe_trovate++;
+
+			if( flag == 1 ){  			//riprendo la normale riduzione di gauss
+				st = righe_trovate;
+			}else{
+
+				if( st < righe_trovate ){  //se sono nella modalitá ottimizzazione e supero le prime n righe allora ritorno alla normale riduzione
+					flag = 1;
+					st = righe_trovate;
+				}
+			}
+
+			inv = invers(m[pivot_riga*col+pivot_colonna],module);		//inverso dell´ elemento in m[r][pivot_colonna]	
+
+			#pragma omp parallel for private(i,s,k,a)
+			for( i = st; i < row; i++ ){
+				if( m[i*col+pivot_colonna] != 0 ){		//m[i][pivot_colonna]
+					
+					s = mul_mod(inv,m[i*col+pivot_colonna],module);						
+					for( k = 0; k < pivot_colonna+1; k++ ){
+						a = mul_mod(s,m[pivot_riga*col+k],module);
+						m[i*col+k] = sub_mod(m[i*col+k],a,module);
+
+					}
+				}
+			}
+		}
+	}
+}
+
+int null_rows(int *m, int row, int col){
+//calcola il numero di righe nulle presenti nella matrice m.
+
+	int i,j,last,null_rows;
+	null_rows = 0;
+	for(i=0; i<row; i++){
+		last = -1;
+		for(j=col-1; j>-1; j--){
+			if(m[i*col+j] != 0 ){
+				last = j;
+				break;
+			}
+		}
+		if( last == -1 )
+			null_rows++;
+	}
+	return null_rows;
+}
+
+void eliminate_null_rows(int **m, int *row, int col){
+//Elimina dalla matrice m le righe nulle.
+//N.B. questa procedura elimina le ultime righe nulle della matrice.
+//Questa funzione DEVE essere utilizzata dopo la riduzione di Gauss.
+//La riduzione di Gauss sposta nelle ultime posizioni tutte le righe nulle.
+//Se non si esegue questa funzione dopo Gauss si possono eliminare righe non nulle.	
+
+	int null_row = null_rows(*m,*row,col);
+	int new_rows = *row - null_row;
+	if(null_row != 0){
+		*m = (int *)realloc( *m , (new_rows*col) * sizeof (int));
+		*row = new_rows;
+	}
+}
+
+void print_matrix_degree(int *m_deg, FILE *output_file){
+//stampa il vettore dei gradi della matrice.
+	int i;
+	fprintf(output_file, "Gradi della matrice = {");
+	for(i=0; i<max_degree+1; i++)
+		if( m_deg[i] != 0 )	fprintf(output_file, " %d ",i);
+	fprintf(output_file, "}\n");
+}
+
+int target_degree(int *v){
+//Controlla se il vettore v rappresenta la condizione di terminazione con gradi completi {1,2,3,...,max_degree}
+//Se la condizione è soddisfatta return 0 altrimenti -1
+
+	int i,flag;
+	flag = 0;
+	for(i=1; i<max_degree+1; i++){
+		if( v[i] != 1 ){
+			flag = -1;
+			break;
+		}
+	}
+	return flag;
+}
+
+void execute_standard(int **matrix, int * row, int col, struct map map, int *degree, int **monomi, int numero_variabili, int n_loops, int expansion, FILE *output_file){
+
+	clock_t start, end;
+	double elapsed;
+
+	//creo l'array che conterrà i gradi dei vari round
+	int **m_deg_array = (int **)malloc(sizeof(int*));
+	m_deg_array[0] = (int *)calloc(max_degree+1, sizeof(int));
+	int n_round = 0;
+	int *m_deg = m_deg_array[0];
+
+	fprintf(output_file, "Inizio computazione, metodo standard\n");
+	matrix_degree(*matrix, *row, col, m_deg, monomi, numero_variabili);
+
+	int flag, old_v, new_v;
+	flag = old_v = new_v = 0;
+	old_v = *row;
+	//assumo espansione normale
+	int expansion_degree = max_degree;
+	int st = 0;
+	
+	while( flag != 1 ){
+		n_round++;
+
+		fprintf(output_file, "\n -Eseguo moltiplicazione, ");
+		fflush(stdout);
+
+		start = clock();	
+		int length = *row;
+		for(int i=0; i<length; i++){
+			moltiplica_riga_forn(matrix, row, col, i, map, degree, monomi, numero_variabili, expansion_degree);	
+		}
+
+		end = clock();
+		elapsed =  ((double)(end - start)) / CLOCKS_PER_SEC;
+		fprintf(output_file, "numero righe: %d     (%f sec)", *row, elapsed);
+
+		fprintf(output_file, "\n -Eseguo Gauss, ");
+		fflush(stdout);
+		start = clock();
+
+		//applico la riduzione di Gauss
+		gauss(*matrix, *row, col, module, st, NULL);
+		//elimino le righe nulle della matrice
+		eliminate_null_rows(matrix, row, col);
+		
+		//aggiungo all'array i gradi dell'attuale round
+		//n_round+1 perchè salvo anche i gradi prima di inziare i round
+		m_deg_array = (int **)realloc(m_deg_array, sizeof(int*)*(n_round+1));
+		m_deg_array[n_round] = (int *)calloc(max_degree+1, sizeof(int));
+		m_deg = m_deg_array[n_round];
+		
+		end = clock();
+		elapsed =  ((double)(end - start)) / CLOCKS_PER_SEC;
+		fprintf(output_file, "numero righe: %d               (%f sec)\n", *row, elapsed);
+
+  		matrix_degree(*matrix,*row, col, m_deg, monomi, numero_variabili);
+		print_matrix_degree(m_deg, output_file);
+
+		new_v = *row;
+		st = new_v;
+
+
+		if( target_degree(m_deg) == 0 )
+			flag = 1;
+		else{
+			old_v = new_v;
+			}
+	
+	}
+	for (int i = 0; i < n_round+1; i++)
+		free(m_deg_array[i]);	
+	free(m_deg_array);	
+}
+
 int main (int argc, char *argv[]){
 
 	FILE *input_file = NULL, *output_file = NULL;
@@ -679,1038 +1026,24 @@ int main (int argc, char *argv[]){
 	elapsed =  ((double)(end - start)) / CLOCKS_PER_SEC;
 	fprintf(output_file, "\nMappa creata in %f sec,   %d x %d \n\n", elapsed, col, col);
 
+	//RISOLUZIONE PROBLEMA
+	start = clock();	
+
+	//inizializzazione vettore dei gradi dei polinomi
+	init_degree_vector(degree, numero_variabili);
+
+	int n_loops = 30, expansion = 1;
+	//eseguo moltiplicazione e riduzione di Gauss finche non trovo soluzione
+	execute_standard(&matrix, &row, col, smap, degree, monomi, numero_variabili, n_loops, expansion, output_file);
+
+	end = clock();
+	elapsed =  ((double)(end - start)) / CLOCKS_PER_SEC;
+	fprintf(output_file, "\nTarget raggiunto, soluzione trovata in %f sec\n\n", elapsed);
 
 	print_matrix(matrix, row, col, output_file);
 
-
-	/*
-
-
-	//RISOLUZIONE PROBLEMA
-	
-	//testing
-	double t0 = omp_get_wtime();
-
-	//inizializzazione vettore dei gradi dei polinomi
-	init_degree_vector(degree,num_var);
-
-	//eseguo moltiplicazione e riduzione di Gauss finche non trovo soluzione
-//----------------------------------------------------------------------------
-
-	if (!verify_flag)
-		switch (execute) {
-		case 1:
-			execute_confronto(&m,d_row,col,smap,degree,vet,num_var,n_loops,expansion,output_file);
-			break;
-		case 2:
-			execute_eliminazione(&m,d_row,col,smap,degree,vet,num_var,n_loops,expansion,output_file);
-			break;
-		default:
-			execute_standard(&m,d_row,col,smap,degree,vet,num_var,n_loops,expansion,output_file);
-			break;	
-		}
-	else	
-		verifica_correttezza(m,row,col,smap,degree,vet,num_var,n_loops,expansion,output_file,ex1,ex2);
-
-//----------------------------------------------------------------------------
-
-	
-	double t1 = omp_get_wtime();
-
-	fprintf(output_file, "\nTarget raggiunto, soluzione trovata in %f sec\n\n",omp_get_wtime()-start_time);
-
-
-	//stampa tutta la matrice soluzione
-	if (verbose_flag) {
-		fprintf(output_file, "\n\n matrice soluzione:\n\n");
-		print_matrix(m, row, col, output_file);
-	}
-	fprintf(output_file, "Valori delle incognite\n\n");
-	print_incognite(m,row,col,num_var,vet,output_file);
-
-	//deallocazione di tutti i puntatori utilizzati
-	matrix_free_long(&m,row,col);
-	free_struct_map(&smap);
-	//matrix_free_int(&map,len,len);
-	matrix_free_int(&vet,len,num_var);
-
-	//testing
-	if (test_flag) {fprintf(output_file, "\n%f\n", t1-t0);}
-
-	*/
-
 	free(matrix);
-
+	free(degree);
 	return 0;
 }
 
-
-
-/*
-
-void execute_eliminazione(int ***m, int * d_row, int col, struct map map, int *degree, int **vet, int num_var, int n_loops, int expansion, FILE *output_file){
-
-	//eseguo moltiplicazione e riduzione di Gauss finche non trovo soluzione
-	//non moltiplico le linee iniziali uguali a quelle dell'iterazione precedente
-	//tot = matrice totale su cui faccio gauss
-	//prev = matrice dell'iterazione precedente
-	//m = "now" = matrice che contiene le righe diverse tra tot e prev, che vanno moltiplicate
-	//	e aggiunte a tot prima di fare gauss
-	double start_time = omp_get_wtime(), stopwatch;
-
-	//creo l'array che conterrà i gradi dei vari round
-	int **m_deg_array = malloc(sizeof(int*));
-	m_deg_array[0] = calloc(max_degree+1, sizeof(int));
-	int n_round = 0;
-	int *m_deg = m_deg_array[0];
-	
-	fprintf(output_file, "Inizio computazione, metodo eliminazione\n");
-	matrix_degree(*m,*d_row,col,m_deg,vet,num_var);
-
-	int flag,old,new;
-	flag = old = new = 0;
-	old = *d_row;
-	//assumo espansione normale
-	int expansion_degree = max_degree;
-
-	int **prev = NULL;
-	int row_prev = 0, row_tot = *d_row;
-	int **tot = NULL;
-	//tot = now
-	matrix_alloc_long(&tot, row_tot, col);
-	matrix_cpy(*m, row_tot, col, tot);
-
-	if (set_expand_flag)
-		expansion_degree = expansion;
-
-
-	while( flag != 1 ){
-		n_round++;
-		
-		//prev = tot, salvo la matrice della precedente iterazione
-		row_prev = row_tot;
-		matrix_alloc_long(&prev, row_prev, col);
-		matrix_cpy(tot, row_prev, col, prev);
-
-		//mult(now), moltiplico le linee diverse. Nella prima iterazione
-		//non sono diverse, ma sono poche e non influisce sulle prestazioni
-		fprintf(output_file, "\n -Eseguo moltiplicazione su m, ");
-		fflush(stdout);
-	
-		set_expansion_degree(&expansion_degree, m_deg);
-
-		int length = *d_row;
-		stopwatch = omp_get_wtime();
-		for(int i=0; i<length; i++){
-			moltiplica_riga_forn(m,d_row,col,i,map,degree,vet,num_var,expansion_degree);	
-		}
-
-		//moltiplica_matrice(m,d_row,col,map,degree,vet,num_var,0);
-		
-		//tot = tot + now, faccio append a tot di now (linee moltiplicate)
-		append_and_free_matrix(&tot, &row_tot, col, m, d_row, col);
-		//non mi serve più now
-		//matrix_free_long(m, *d_row, col);
-		fprintf(output_file, "grado di espansione: %d, numero righe: %d     (%f sec)\n", expansion_degree, row_tot, omp_get_wtime()-stopwatch);
-
-		if (partial_gauss_flag)
-			partial_gauss(tot, row_tot, col, num_var, output_file);
-		
-		//gauss(tot), gauss su tot che ha anche le linee moltiplicate
-		fprintf(output_file, " -Eseguo Gauss, ");
-		fflush(stdout);
-		stopwatch = omp_get_wtime();	
-		
-		gauss(tot, row_tot, col, module, 0, NULL);
-		eliminate_null_rows(&tot, &row_tot, col);
-		fprintf(output_file, "numero righe: %d              (%f sec)\n", row_tot ,omp_get_wtime()-stopwatch);
-		
-		//now = tot - prev, tolgo da tot le linee iniziali uguali a quelle
-		//dell'iterazione precedente e assegno il risultato a now
-		*d_row = row_tot;
-		matrix_alloc_long(m, *d_row, col);
-		matrix_cpy(tot, row_tot, col, *m);
-		//eliminate_equal_rows(m, d_row, prev, row_prev, col);
-		eliminate_equal_starting_rows(m, d_row, prev, row_prev, col);
-		
-		//aggiungo all'array i gradi dell'attuale round
-		//n_round+1 perchè salvo anche i gradi prima di inziare i round
-		m_deg_array = realloc(m_deg_array, sizeof(int*)*(n_round+1));
-		m_deg_array[n_round] = calloc(max_degree+1, sizeof(int));
-		m_deg = m_deg_array[n_round];
-		
-		//degree(tot), aggiorno gradi/target
-  		matrix_degree(tot, row_tot,col,m_deg,vet,num_var);
-		print_matrix_degree(m_deg,output_file);
-		new = row_tot;
-		
-		matrix_free_long(&prev, row_prev, col);
-
-
-		//se i gradi dei round formano più di n_loops cilcli e se il flag è true
-		//o trovo una matrice con le stesso numero di righe della precedente mi fermo
-		if( (find_finishing_cycle(m_deg_array, n_round+1, max_degree) > n_loops && loop_flag) || ((!loop_flag) && old == new)  ) {
-			flag = 1;
-			fprintf(output_file, "\n\nEXIT: superato numero di cicli massimo o numero righe rimaste invariate\n\n");	
-		}
-		else
-			if( target_degree(m_deg) == 0 )
-				flag = 1;
-			else{
-				old = new;
-				//verbose
-				if (verbose_flag) {
-					fprintf(output_file, "\nMatrice intermedia:\n\n");
-					print_matrix(tot, row_tot, col, output_file);
-				}
-			}
-
-	}
-
-	matrix_free_long(m, *d_row, col);
-	for (int i = 0; i < n_round+1; i++)
-		free(m_deg_array[i]);	
-	free(m_deg_array);
-	*m = tot;
-	*d_row = row_tot;
-}
-
-
-
-void execute_confronto(int ***m, int * d_row, int col, struct map map, int *degree, int **vet, int num_var, int n_loops, int expansion, FILE *output_file){
-
-	
-	int flag,old,new,inv;
-	flag = old = new = 0;
-	old = *d_row;
-
-	int st = inv = 0;
-	
-	int *v1,*v2;
-
-	double start_time = omp_get_wtime(), stopwatch;
-
-	//creo l'array che conterrà i gradi dei vari round
-	int **m_deg_array = malloc(sizeof(int*));
-	m_deg_array[0] = calloc(max_degree+1, sizeof(int));
-	int n_round = 0;
-	int *m_deg = m_deg_array[0];
-	//assumo espansione normale
-	int expansion_degree = max_degree;
-	matrix_degree(*m,*d_row,col,m_deg,vet,num_var);
-
-	if (set_expand_flag)
-		expansion_degree = expansion;
-
-	fprintf(output_file, "Inizio computazione, metodo confronto\n");
-	//-------------------------------------------------------------------------------------------
-
-	fprintf(output_file, "\n -Eseguo moltiplicazione, ");
-	fflush(stdout);
-
-	stopwatch = omp_get_wtime();
-
-	set_expansion_degree(&expansion_degree, m_deg);
-
-	//moltiplico
-	int length = *d_row;
-	for(int i=0; i<length; i++){
-		moltiplica_riga_forn(m,d_row,col,i,map,degree,vet,num_var,expansion_degree);	
-	}
-
-
-	//moltiplico la matrice per tutti i monomi possibili
-	//moltiplica_matrice(m,d_row,col,map,degree,vet,num_var,0);
-	
-	fprintf(output_file, "grado di espansione: %d, numero righe: %d     (%f sec)\n", expansion_degree, *d_row, omp_get_wtime()-stopwatch);
-
-	while( flag != 1 ){
-		n_round++;
-//-------------------------------------------------------------------------------------------
-		// calcolo la posizone dell'ultimo elemento di ogni riga della matrice prima di effettuare gauss	
-
-		v1 = calloc( *d_row , sizeof( int ) );
-		for( int i = 0; i < *d_row; i++ ){
-			for( int j = col-1; j>=0; j--){
-				if( (*m)[i][j] != 0 ){
-					v1[i] = j;
-					break;	
-				}	
-			}
-		}
-
-		//passo il vettore appena calcolato alla procedura di gauss per invertire le righe in modo analogo a quanto avviene nella riduzione
-
-//-------------------------------------------------------------------------------------------
-		if (partial_gauss_flag)
-			partial_gauss(*m, *d_row, col, num_var, output_file);
-
-
-		fprintf(output_file, "\n -Eseguo Gauss, ");
-		fflush(stdout);
-		stopwatch = omp_get_wtime();
-
-		//applico la riduzione di Gauss
-		gauss(*m, *d_row, col, module, st,v1);
-		//magma_gauss(m, *d_row, col, module);
-
-		//elimino le righe nulle della matrice
-		eliminate_null_rows(m,d_row,col);
-
-		//aggiungo all'array i gradi dell'attuale round
-		//n_round+1 perchè salvo anche i gradi prima di inziare i round
-		m_deg_array = realloc(m_deg_array, sizeof(int*)*(n_round+1));
-		m_deg_array[n_round] = calloc(max_degree+1, sizeof(int));
-		m_deg = m_deg_array[n_round];
-
-		fprintf(output_file, "numero righe: %d               (%f sec)\n", *d_row,omp_get_wtime()-stopwatch);
-  		matrix_degree(*m,*d_row,col,m_deg,vet,num_var);
-		print_matrix_degree(m_deg,output_file);
-
-		new = *d_row;
-		st = new;
-//-----------------------------------------------------------
-		// ricalcolo la posizione dell'ultimo elemento di ogni riga dopo aver effettuato gauss
-			
-		v2 = calloc( *d_row , sizeof( int ) );
-		for( int i = 0; i < *d_row; i++ ){
-			for( int j = col-1; j>=0; j--){
-				if( (*m)[i][j] != 0 ){
-					v2[i] = j;
-					break;	
-				}	
-			}
-		}
-//----------------------------------------------------------
-		// controllo le condizioni di uscita
-
-		//se i gradi dei round formano più di n_loops cilcli e se il flag è true
-		//o trovo una matrice con le stesso numero di righe della precedente mi fermo
-		if( (find_finishing_cycle(m_deg_array, n_round+1, max_degree) > n_loops && loop_flag) || (!(loop_flag) && old == new)  ) {
-			flag = 1;
-			fprintf(output_file, "\n\nEXIT: superato numero di cicli massimo o numero righe rimaste invariate\n\n");	
-			break;
-		}else{
-			if( target_degree(m_deg) == 0 ){
-				flag = 1;
-				break;
-			}
-			else{
-				old = new;
-				//verbose
-				if (verbose_flag) {
-					fprintf(output_file, "\nMatrice intermedia:\n\n");
-					print_matrix(*m, *d_row, col, output_file);
-				}
-			}
-		}
-		fprintf(output_file, "\n -Eseguo moltiplicazione, ");
-		fflush(stdout);
-
-		set_expansion_degree(&expansion_degree, m_deg);
-		
-		//moltiplico
-		int length = *d_row;
-		stopwatch = omp_get_wtime();
-		for(int i=0; i<length; i++){
-			if( v1[i] > v2[i] ){ 	//significa che la riga è stata ridotta
-
-				moltiplica_riga_forn(m,d_row,col,i,map,degree,vet,num_var,expansion_degree);	//allora moltiplico tale riga
-				//moltiplica_riga(m,d_row,col,i,map,degree,vet,num_var);	//allora moltiplico tale riga
-			}
-		}
-
-		fprintf(output_file, "grado di espansione: %d, numero righe: %d     (%f sec)\n", expansion_degree, *d_row, omp_get_wtime()-stopwatch);
-
-	
-		free(v2);
-		free(v1);
-	}
-	for (int i = 0; i < n_round+1; i++)
-		free(m_deg_array[i]);	
-	free(m_deg_array);
-	//finito algoritmo moltiplicazione e riduzione
-}
-
-
-
-
-void execute_standard(int ***m, int * d_row, int col, struct map map, int *degree, int **vet, int num_var, int n_loops, int expansion, FILE *output_file){
-
-	double start_time = omp_get_wtime(), stopwatch;
-
-	//creo l'array che conterrà i gradi dei vari round
-	int **m_deg_array = malloc(sizeof(int*));
-	m_deg_array[0] = calloc(max_degree+1, sizeof(int));
-	int n_round = 0;
-	int *m_deg = m_deg_array[0];
-
-	fprintf(output_file, "Inizio computazione, metodo standard\n");
-	matrix_degree(*m,*d_row,col,m_deg,vet,num_var);
-
-	int flag,old,new;
-	flag = old = new = 0;
-	old = *d_row;
-	//assumo espansione normale
-	int expansion_degree = max_degree;
-	int st = 0;
-
-	
-	if (set_expand_flag)
-		expansion_degree = expansion;
-
-
-	while( flag != 1 ){
-		n_round++;
-
-		fprintf(output_file, "\n -Eseguo moltiplicazione, ");
-		fflush(stdout);
-
-		set_expansion_degree(&expansion_degree, m_deg);
-		stopwatch = omp_get_wtime();
-		
-		//moltiplico
-		int length = *d_row;
-		for(int i=0; i<length; i++){
-			moltiplica_riga_forn(m,d_row,col,i,map,degree,vet,num_var,expansion_degree);	
-		}
-
-		//moltiplico la matrice per tutti i monomi possibili
-		//moltiplica_matrice(m,d_row,col,map,degree,vet,num_var,0);
-		
-		fprintf(output_file, "grado di espansione: %d, numero righe: %d     (%f sec)\n", expansion_degree, *d_row, omp_get_wtime()-stopwatch);
-
-		if (partial_gauss_flag)
-			partial_gauss(*m, *d_row, col, num_var, output_file);
-
-		fprintf(output_file, "\n -Eseguo Gauss, ");
-		fflush(stdout);
-		stopwatch = omp_get_wtime();	
-
-
-		//applico la riduzione di Gauss
-		gauss(*m, *d_row, col, module, st,NULL);
-		//elimino le righe nulle della matrice
-		eliminate_null_rows(m,d_row,col);
-		
-		
-		//aggiungo all'array i gradi dell'attuale round
-		//n_round+1 perchè salvo anche i gradi prima di inziare i round
-		m_deg_array = realloc(m_deg_array, sizeof(int*)*(n_round+1));
-		m_deg_array[n_round] = calloc(max_degree+1, sizeof(int));
-		m_deg = m_deg_array[n_round];
-		
-		fprintf(output_file, "numero righe: %d               (%f sec)\n", *d_row,omp_get_wtime()-stopwatch);
-  		matrix_degree(*m,*d_row,col,m_deg,vet,num_var);
-		print_matrix_degree(m_deg,output_file);
-
-		new = *d_row;
-		st = new;
-
-
-		//se i gradi dei round formano più di n_loops cilcli e se il flag è true
-		//o trovo una matrice con le stesso numero di righe della precedente mi fermo
-		if( (find_finishing_cycle(m_deg_array, n_round+1, max_degree) > n_loops && loop_flag) || (!(loop_flag) && old == new)  ) {
-			flag = 1;
-			fprintf(output_file, "\n\nEXIT: superato numero di cicli massimo o numero righe rimaste invariate\n\n");	
-		}
-		else
-			if( target_degree(m_deg) == 0 )
-				flag = 1;
-			else{
-				old = new;
-				//verbose
-				if (verbose_flag) {
-					fprintf(output_file, "\nMatrice intermedia:\n\n");
-					print_matrix(*m, *d_row, col, output_file);
-				}
-			}
-
-	}
-	for (int i = 0; i < n_round+1; i++)
-		free(m_deg_array[i]);	
-	free(m_deg_array);
-
-//finito algoritmo moltiplicazione e riduzione
-}
-
-
-int init_matrix(int **m, int row, int col, int **vet_grd, char *v, int num_var, int (*ord) (const void *, const void *, void*), FILE *input_file ){
-//Inizializza la matrice principale (dei coefficienti) con i coefficienti dei polinomi forniti come input.
-	return parse(num_var,v,m,row,vet_grd,col,module,ord,input_file);
-}
-
-
-/*
-Moltiplica la riga indicata (riga) della matrice m per ogni monomio con grado <= al stop_degree
-o comunque il polinomio risultante abbia grado <= max_degree.
-Il prodotto avviene su monomi con coefficiente sempre uguale a 1.
-Il prodotto consiste quindi in uno shift della posizione del monomio in esame.
-Il parametro map fornisce una mappa delle posizioni in cui inserire il prodotto di due monomi.
-La matrice aumenta il numero di righe in base a quanti prodotti devo eseguire.
-Gli ultimi due parametri servono per il calcolo del grado di un monomio.
-*/
-
-/*
-void moltiplica_riga_forn(int ***m, int * row, int col, int riga, struct map map, int * degree, int **vet, int num_var, int stop_degree){
-
-	int grado_massimo_riga, grado_massimo_monomio,i,j,last,new_row;
-	last = -1;
-	//cerco la posizione dell'ultimo coefficiente non nullo del polinomio rappresentato nella riga.
-	for(i=col-1; i>0; i--){
-		if( (*m)[riga][i] != 0 ){
-			last = i;
-			break;
-		}
-	}
-	//risalgo al grado del monomio appena trovato
-	//scorro la lista delle posizioni di inizio dei monomi con lo stesso grado
-	if( last != -1 ){
-
-		grado_massimo_riga = grado_monomio(last,vet,num_var);
-
-		//calcolo il grado massimo che deve avere il monomio per cui moltiplicare
-		grado_massimo_monomio = max_degree - grado_massimo_riga;
-		// a questo punto conosco per quanti monomi devo moltiplicare e quindi
-		// conosco il numero di righe che devo aggiungere alla matrice
-		new_row = 0;
-
-		if( stop_degree != 0 ){
-			
-			if( grado_massimo_monomio > stop_degree ){
-				grado_massimo_monomio = stop_degree;
-			}
-		}
-
-		for(i=1; i<(grado_massimo_monomio+1); i++){
-			new_row += degree[i];
-		}
-
-		*m = realloc( *m , (*row + new_row ) * sizeof (int *));
-
-		for (i=(*row); i< (*row + new_row ); i++)
-			(*m)[i] = calloc(col , sizeof (int) );
-
-
-		for(i=1; i<(new_row+1); i++){     								//scorre tutti i monomi per i quali posso moltiplicare
-			//#pragma omp parallel for shared (m,row,riga)
-			for(j=0; j<(last+1); j++){     								//scorre fino all'ultimo elemento della riga
-				(*m)[*row][ map.row[i].col[j] ] = (*m)[riga][j];  				//shift nella posizione corretta indicata dalla mappa
-			}
-			*row = *row + 1;											//aumento del conteggio delle righe
-		}
-	}
-}
-
-
-
-
-int grado_monomio(int posizione, int **vet, int num_var){
-//Calcola il grado del monomio a partire dalla posizione occupata nel vettore (ordinato) delle posizioni rispetto l'ordinamento scelto.
-//(la posizione occupata deve essere corretta).
-	int i,grado;
-	grado = 0;
-	for(i=0; i<num_var; i++){
-		grado += vet[posizione][i];
-	}
-	return grado;
-}
-
-
-void init_degree_vector(int * degree, int num_var){
-//inizializza il vettore degree con il numero di monomi di grado i-esimo <= del grado massimo
-	int i,j,c;
-	for(i=0; i<max_degree+1; i++){
-		c = combination(num_var,i);
-		degree[i] = c;
-	}
-}
-
-
-
-/*
-mappa tutte le possibili moltiplicazioni dei monomi di n variabili e grado <= m
-dell'array vet di lunghezza len, nella matrice map[len][len].
-Al termine map[x][y] contiene la posizione all'interno di vet del
-monomio risultato dal prodotto di vet[x]*vet[y]
-Esempio: vet[4] * vet[10] = vet [map[4][10]]
-se il grado del prodotto supera m viene messo il valore -1 nella matrice.
-compar è la funzione secondo cui vet è ordinato,
-la matrice map deve essere già correttamente allocata
-*/
-/*
-void setup_map(int **map, int **vet, int len, int n, int m, int (*compar) (const void *, const void *, void*)) {
-
-	int sum, *temp = malloc(n * sizeof(int));
-
-	//per ogni monomio in vet
-
-	for (int row = 0; row < len; row++)
-		//provo a moltiplicarlo con ogni monomio in vet
-		for (int col = 0; col < len; col++) {
-			sum = 0;
-			//eseguo il prodotto (sum è la somma dei gradi)
-			for (int v = 0; v < n; v++) {
-				temp[v] = vet[row][v] + vet[col][v];
-				sum += temp[v];
-			}
-			//se il grado del prodotto > grado massimo tutti i restanti prodotti
-			//su quella riga sono > grado massimo, setto a -1 il resto della riga
-			if (sum > m) {
-
-				for (int i = col; i < len; i++)
-					map[row][i] = -1;
-				break;
-			}
-			//altrimenti cerco il prodotto in vet e metto l'indice in map
-			else{
-				map[row][col] = (int **)(bsearch_r((void *) &temp, (void *) vet, len, (sizeof(int*)), compar, &n)) - vet;
-			}
-		}
-	free(temp);
-}
-
-
-void setup_struct_map(struct map *map, int **vet, int len, int n, int m, int (*compar) (const void *, const void *, void*)  ){
-	
-	int sum, index=len;
-
-	//	inizializzo la struttura map, la mappa ha len righe.
-	map->len = len;
-	map->row = malloc( map->len * sizeof(struct map_row) );
-
-	//per ogni monomio in vet
-	int row, col, i, v;
-	#pragma omp parallel for private(row,col,sum,index,i,v) schedule(dynamic)
-	for (row = 0; row < len; row++){
-		index = 0;
-		//dichiarati dentro per la parallelizzazione
-		int *temp = malloc(n * sizeof(int));
-		int *save = calloc(len, sizeof(int));
-		//provo a moltiplicarlo con ogni monomio in vet
-		for (col = 0; col < len; col++) {
-			sum = 0;
-			//eseguo il prodotto (sum è la somma dei gradi)
-			for (v = 0; v < n; v++) {
-				temp[v] = vet[row][v] + vet[col][v];
-				sum += temp[v];
-			}
-			//se il grado del prodotto > grado massimo tutti i restanti prodotti
-			//su quella riga sono > grado massimo
-			if (sum > m) {
-
-				//	a questo punto col è l'indice del primo elemento della mappa che non è possibile rappresentare, quindi la riga row ha solo col numero di celle e non len come prima.
-				index = col;
-				break;
-			}
-			//altrimenti cerco il prodotto in vet e metto l'indice in save
-			else{
-				save[col] = (int **)(bsearch_r((void *) &temp, (void *) vet, len, (sizeof(int*)), compar, &n)) - vet;
-			}
-		}
-
-		//	terminato il ciclo sulle colonne posso inizializzare la struttura perchè conosco tutti gli elementi da inserire	
-		//  la riga attuale ha esattamente index elementi diversi da -1, quindi la riga avrà lunghezza pari a index precedentemente calcolato
-		//  alloco la riga con un array da index elementi
-
-		map->row[row].len = index;
-		map->row[row].col = malloc( map->row[row].len * sizeof(int) );
-		//	a questo map devo copiare gli elementi generati dento alla struttura
-
-		for(i=0; i<map->row[row].len; i++)
-			map->row[row].col[i] = save[i];
-		
-		free(temp);
-		free(save);
-	}
-}
-
-void print_struct_map(struct map map, FILE *output_file){
-
-	fprintf(output_file, "Inizio stampa\n");
-	for(int i=0; i<map.len; i++ ){
-		for(int j=0; j<map.row[i].len; j++){
-			fprintf(output_file, "%d ", map.row[i].col[j]);
-		}
-		fprintf(output_file, "\n");
-	}
-	fprintf(output_file, "Fine stampa\n");
-}
-
-
-void free_struct_map(struct map *map){
-	for(int i=0; i<map->len; i++){
-		free(map->row[i].col);
-	}
-	free(map->row);
-}
-
-
-/*restituisce un array contenente tutti i len monomi con n variabili e grado <= m
-len è il numero di possibili monomi con n variabili e grado <= m
-i monomi sono array di interi di lunghezza n dove il valore di ogni posizione rappresenta
-il grado della variabile in quella posizione. Esempio: n=3, x^2*y*z = [2,1,1]
-len viene passato come argomento per evitare di ricalcolarlo internamente
-*/
-/*
-int **monomial_computation(int n, int m, int len) {
-
-	int **vet, *monomial;
-
-	//alloco la memoria per l'array
-	matrix_alloc_int(&vet,len,n);
-
-	//strutture di supporto necessarie per il calcolo
-	monomial = malloc(n * sizeof(int));
-	int pos = 0;
-
-	//il calcolo è fatto dalla funzione ricorsiva correttemente parametrizzata
-	monomial_computation_rec(n, m, vet, 0, monomial, &pos);
-
-	free(monomial);
-
-	return vet;
-}
-
-
-
-/*funzione ricorsiva che calcola tutti i possibili monomi con n variabili e grado <= m
-e li inserisce nell'array vet. I monomi sono rappresentati come array di interi dove
-il valore di ogni posizione rappresenta il grado della variabile in quella posizione.
-Esempio: n=3, x^2*y*z = [2,1,1].
-L'array vet deve essere già allocato correttamente. Gli altri parametri sono necessari
-per la struttura ricorsiva della funzione e alla prima chiamata devono essere:
-- turn = 0, rappresenta la posizione della variabile nel monomio
-- monomial = array di interi di lunghezza n già allocato e usato per calcolare i vari monomi
-- *pos = 0 puntatore ad intero, rappresenta la prima posizione libera nell'array vet
-*/
-/*
-void monomial_computation_rec(int n, int m, int **vet, int turn, int *monomial, int *pos) {
-
-	//per ogni variabile provo tutti i gradi da 0 a m
-	for (int degree = 0; degree <= m; degree++) {
-		//se questa è la prima variabile azzero il monomio
-		if (turn == 0) {
-			//azzero il monomio lasciando solo il grado della prima variabile
-			monomial[0] = degree;
-			for (int v = 1; v < n; v++)
-				monomial[v] = 0;
-		}
-		//altrimenti le altre variabili aggiungo il proprio grado al monomio
-		else
-			monomial[turn] = degree;
-
-
-		//ottengo il grado del monomio sommando i gradi delle variabili
-		int sum = 0;
-		for (int v = 0; v <= turn; v++)
-			sum += monomial[v];
-		//se il grado del monomio supera quello massimo non ha senso continuare a cercare
-		//altri monomi partendo da questo, perchè tutti avranno grado maggiore o uguale
-		if (sum > m)
-			break;
-
-		//se questa è l'ultima variabile copia il monomio nell'array vet and incrementa l'indice pos
-		if (turn == (n-1)) {
-			vctcpy(vet[(*pos)], monomial, n);
-			(*pos)++;
-		}
-		//altrimenti richiama se stessa cambiando la variabile (turn)
-		else
-			monomial_computation_rec(n, m, vet, turn+1, monomial, pos);
-	}
-
-	return;
-}
-
-
-
-
-void matrix_degree(int **m, int row, int col, int *m_deg, int **vet, int num_var){
-//m_deg è un vettore che ha lunghezza pari al grado massimo.
-//la funzione calcola i gradi dei polinomi presenti nella matrice.
-//Ogni cella del vettore m_deg rappresenta un grado, se esso compare nella matrice allora viene impostato a 1 o altrimenti.
-
-	int i,j,last,grado;
-	for(i=0; i<row; i++){
-		for(j=col-1; j>0; j--){
-			if( m[i][j] != 0 ){
-				last = j;           //posizione dell'ultimo coefficiente della riga
-				break;
-			}
-		}
-		grado = grado_monomio(last,vet,num_var);
-		m_deg[grado] = 1;
-	}
-}
-
-//in base alle flag calcola il grado di espansione e lo metto in expansion_degree
-//m_deg è l'array dei gradi dei polinomi presenti nella matrice
-void set_expansion_degree(int *expansion_degree,int *m_deg) {
-
-	if (manual_expand_flag) {
-		fprintf(stdout, "inserire grado di espansione: ");
-		fscanf(stdin, " %d", expansion_degree);
-	}
-	//se ridotta calcolo il grado mancante
-	else if (reduced_expand_flag)
-		for(int i=max_degree; i>0; i--){
-			if( m_deg[i] == 0 ){
-				*expansion_degree = i;
-				break;
-			}
-		}
-	return;
-
-}
-
-
-//esegue gauss, se richiesto, su una porzione della matrice specificata dall'utente
-//e stampa il risultato nel output_file
-void partial_gauss(int **m, int row, int col, int num_var, FILE *output_file) {
-
-	char answer = 'n';
-	int **temp;
-	int col_degree, temp_col;
-
-	fprintf(stdout, "\nSi vuole effettuare gauss su una porzione della matrice? (y/n):  ");
-	fscanf(stdin, " %c", &answer);
-	
-	if (answer != 'y')
-		return;
-
-	fprintf(stdout, "\nScegliere il grado massimo dei monomi su cui eseguire l'eliminazione:  ");
-	fscanf(stdin, " %d", &col_degree);
-
-	if (col_degree > max_degree || col_degree < 0)
-		col_degree = max_degree;
-	temp_col = monomial_combinations(num_var, col_degree);
-
-	matrix_alloc_long(&temp, row, temp_col);
-	matrix_cpy(m, row, temp_col, temp);
-	gauss(temp, row, temp_col, module, 0, NULL);
-	eliminate_null_rows(&temp, &row, temp_col);
-	
-	fprintf(output_file, "\nEseguo gauss parziale su %d colonne\n\n", temp_col);
-	print_matrix(temp, row, temp_col, output_file);
-
-	matrix_free_long(&temp, row, temp_col);
-
-	return;
-}
-
-
-void print_matrix_degree(int *m_deg, FILE *output_file){
-//stampa il vettore dei gradi della matrice.
-	int i;
-	fprintf(output_file, "Gradi della matrice = {");
-	for(i=0; i<max_degree+1; i++)
-		if( m_deg[i] != 0 )	fprintf(output_file, " %d ",i);
-	fprintf(output_file, "}\n");
-}
-
-
-
-
-int target_degree(int *v){
-//Controlla se il vettore v rappresenta la condizione di terminazione con gradi completi {1,2,3,...,max_degree}
-//Se la condizione è soddisfatta return 0 altrimenti -1
-
-	int i,flag;
-	flag = 0;
-	for(i=1; i<max_degree+1; i++){
-		if( v[i] != 1 ){
-			flag = -1;
-			break;
-		}
-	}
-	return flag;
-}
-
-
-//funzione che prende un vettore vet contenente length vettori di lunghezza (max_deg+1)
-//retituisce il numero di cicli massimo all'interno di vet partendo dai valori in fondo
-int find_finishing_cycle(int **vet, int length, int max_deg) {
-	int st1, st2, temp1, temp2, max_cycles, n_cycles;
-	st1 = length - 1;
-	max_cycles = n_cycles = 0;
-	int l_deg = max_deg + 1;
-	
-	//per ogni elemento prima di st1 fino a metà
-	//oltre la metà non ci può più essere un loop
-	for (st2 = length-2; st2 >= (length/2)-1; st2--) {
-		n_cycles = 0;
-		//se sono uguali potrebbe essere l'inizio di un ciclo
-		if (!compare_arrays(&(vet[st1]), &(vet[st2]), &l_deg)) {
-			//guardo i valori precedenti agli start
-			temp1 = st1 - 1;
-			temp2 = st2 -1;
-			//condizione necessaria per i primi valori di fila uguali
-			//(fatto solo la prima volta) 12333 <- trovo i 333 = 2 cicli
-			if (st1-1 == st2) {
-				n_cycles++;
-				while(temp2 >= 0 && !compare_arrays(&vet[st1], &vet[temp2], &l_deg)) {
-					n_cycles++;
-					temp2--;
-				}
-			}
-			else
-				while (temp1 > st2 && temp2 >= 0) {
-					//se sono diversi non è un ciclo, esco
-					if (compare_arrays(&vet[temp1], &vet[temp2], &l_deg))
-						break;
-					temp1--;
-					temp2--;
-					//sono arrivato a st2, ho fatto un ciclo e incremento
-					if (temp1 == st2) {
-						n_cycles++;
-						//se non sono arrivato alla fine
-						if (temp2 > 0) {
-							st2 = temp2;
-							temp1 = st1-1;
-							temp2 = st2-1;
-						}
-					}
-				}
-				//aggiorno il numero di cicli massimo
-				if (n_cycles > max_cycles)
-					max_cycles = n_cycles;
-		}
-	}
-	
-	return max_cycles;
-}
-
-//funzione di confronto gli array rowA con rowB, scorrendo gli elementi da destra a sinistra
-//restituisce 1 se rowA > rowB, -1 se rowB > rowA, 0 altrimenti. Compatibile con qsort_r
-int compare_arrays(const void *rowA, const void *rowB, void *columns) {
-
-	int *row1, *row2;
-	int col;
-	
-	col = *((int *) columns);
-	row1 = *((int **) rowA);
-	row2 = *((int **) rowB);
-	
-	for (int i = col-1; i >= 0; i--) {
-		if (row1[i] > row2[i])
-			return 1;
-		else if (row1[i] < row2[i])
-			return -1;
-	}
-	
-	return 0;
-}
-
-void verifica_correttezza(int **m, int row, int col, struct map map, int *degree, int **vet, int num_var,int n_loops, int expansion, FILE *output_file, int ex1, int ex2){
-
-	int **m1,**m2,**m3;
-	int row1,row2,row3;
-	double start_time = omp_get_wtime(), stopwatch;
-
-	row1 = row2 = row;
-
-	matrix_alloc_long(&m1,row1,col);
-	matrix_alloc_long(&m2,row2,col);
-
-	matrix_cpy(m,row,col,m1);
-	matrix_cpy(m,row,col,m2);
-
-
-
-	fprintf(output_file, "\nESEGUO PRIMA RISOLUZIONE\n");
-	switch (ex1) {
-	case 1:
-		execute_confronto(&m1,&row1,col,map,degree,vet,num_var,n_loops,expansion,output_file);
-		break;
-	case 2:
-		execute_eliminazione(&m1,&row1,col,map,degree,vet,num_var,n_loops,expansion,output_file);
-		break;
-	default:
-		execute_standard(&m1,&row1,col,map,degree,vet,num_var,n_loops,expansion,output_file);
-		break;	
-	}
-
-	fprintf(output_file, "\nTERMINATA PRIMA RISOLUZIONE, NUMERO RIGHE:%d\n",row1);
-
-
-	fprintf(output_file, "\n\nESEGUO SECONDA RISOLUZIONE\n");
-
-	switch (ex2) {
-	case 1:
-		execute_confronto(&m2,&row2,col,map,degree,vet,num_var,n_loops,expansion,output_file);
-		break;
-	case 2:
-		execute_eliminazione(&m2,&row2,col,map,degree,vet,num_var,n_loops,expansion,output_file);
-		break;
-	default:
-		execute_standard(&m2,&row2,col,map,degree,vet,num_var,n_loops,expansion,output_file);
-		break;	
-	}
-
-
-	fprintf(output_file, "\nTERMINATA SECONDA RISOLUZIONE, NUMERO RIGHE:%d\n",row2);
-
-	fprintf(output_file, "\n\nCONFRONTO LE MATRICI PER OTTENERE IL NUMERO DI LINEE DIVERSE\n");
-
-	//trovo il numero di linee diverse tra m1 e m2
-	row3 = row1;
-	matrix_alloc_long(&m3, row3, col);
-	matrix_cpy(m1, row3, col, m3);
-	eliminate_equal_rows(&m3, &row3, m2, row2, col);
-	
-	fprintf(output_file, "\nRIGHE DIVERSE RISPETTO TRA PRIMO E SECONDO METODO:%d\n", row3);
-	matrix_free_long(&m3, row3, col);
-
-	//controllo che i polinomi di una matrice siano linearmente
-	//dipendenti da quelli dell'altra, necessario per soluzioni equivalenti
-	append_and_free_matrix(&m1, &row1, col, &m2, &row2, col);
-
-	fprintf(output_file, "\n\nESEGUO APPEND, NUMERO RIGHE:%d\n",row1);
-
-	int *m_deg = calloc(max_degree+1, sizeof(int));
-	matrix_degree(m1,row1,col,m_deg,vet,num_var);
-	print_matrix_degree(m_deg,output_file);
-
-	fprintf(output_file, " -Eseguo Gauss su matrice totale, ");
-	fflush(stdout);
-	stopwatch = omp_get_wtime();	
-	
-	gauss(m1, row1, col, module, 0, NULL);
-	eliminate_null_rows(&m1, &row1, col);
-	fprintf(output_file, "numero righe: %d              (%f sec)\n", row1 ,omp_get_wtime()-stopwatch);
-	matrix_degree(m1,row1,col,m_deg,vet,num_var);
-	print_matrix_degree(m_deg,output_file);	
-
-	matrix_free_long(&m1,row1,col);
-
-}
-
-
-void print_incognite(int **m, int row, int col, int num_var, int **vet, FILE *output_file){
-
-	int grado,last;
-
-	for(int r = row - (num_var+1); r<row; r++){
-
-		//cerca la posizione dell'ulitmo elemento non nullo della riga r
-		for( int i=col-1; i>=0; i-- ){
-			if( m[r][i] != 0 ){
-				last = i;
-				break;
-			}
-		}
-		//calcola il grado della riga r
-		grado = grado_monomio(last,vet,num_var);
-		//se il grado della riga r è 1 allora stampa tutta la riga della matrice
-		if( grado == 1 ){
-			for( int j=0; j<last+1; j++ ){
-				fprintf(output_file, "%lli ", m[r][j]);
-			}
-			fprintf(output_file, "\n\n");
-		}
-	}
-	fprintf(output_file, "\n");	
-}
-
-*/
