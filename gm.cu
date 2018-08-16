@@ -7,6 +7,7 @@
 #include <omp.h>
 #include <stdbool.h>
 #include <time.h>
+#include <cuda_runtime.h>
 
 // compilazione nvcc gm.cu -o gm -w -Xcompiler " -openmp"
 
@@ -706,6 +707,40 @@ void swap_rows(int *m, int row, int col, int j, int i){
 	}
 }
 
+
+//Scambio di due righe della matrice m.
+__device__ void swap_rows_GPU(int *m, int row, int col, int j, int i){
+	
+	int k;
+	long long tmp;
+	if( j!=i ){
+		for(k=0;k<col;k++){
+			tmp = m[i*col+k];			//m[i][k];
+			m[i*col+k] = m[j*col+k];	//m[i][k] = m[j][k];
+			m[j*col+k] = tmp;			//m[j][k] = tmp;
+		}
+	}
+}
+
+
+//n mod p 
+//Riduzione di n in modulo p.
+__device__ long long mod_GPU(long long n, long long p) {
+	long long v = n, x = 0;
+
+	if (v >= p) {
+		v = n % p;
+	}
+	else {
+		if (v < 0) {
+			x = n / p;
+			v = n - (x*p);
+			v += p;
+		}
+	}
+	return v;
+}
+
 //inverso moltiplicativo di n in modulo p (con p primo).
 int invers(int n, int p){
 	int b0 = p, t, q;
@@ -739,6 +774,121 @@ int mul_mod(int a, int b, int p){
 	return mod((a*b),p);
 }
 
+
+//inverso moltiplicativo di n in modulo p (con p primo).
+__device__ int invers_GPU(int n, int p){
+	int b0 = p, t, q;
+	int x0 = 0, x1 = 1;
+	if (p == 1) return 1;
+	while (n > 1) {
+		q = n / p;
+		t = p, p = (n % p), n = t;
+		t = x0, x0 = x1 - q * x0, x1 = t;
+	}
+	if (x1 < 0) x1 += b0;
+	return x1;	
+}
+
+
+// a + b mod p
+//sommatoria di a e b in modulo p
+__device__ int add_mod_GPU(int a, int b, int p){
+	return mod_GPU((a+b),p);
+}
+
+// a - b mod p
+//sottrazione di a e b in modulo p
+__device__ int sub_mod_GPU(int a, int b, int p){
+	return mod_GPU((a-b),p);
+}
+
+// a * b mod p
+//prodotto di a e b in modulo p
+__device__ int mul_mod_GPU(int a, int b, int p){
+	return mod_GPU((a*b),p);
+}
+
+
+__global__ void gauss_kernel(int *matrix, int row, int col,int module, int start, int*v, int dim){
+		
+	int pivot_riga = 0,r = 0,righe_trovate = 0,i,k;
+	int s,inv,a;
+	int st,flag=0,invarianti=0,flag2=0,tmp;
+
+	if( start == 0 ){
+		flag = 1;
+	}else{
+		st = start;
+	}
+
+	for(int pivot_colonna = col-1; pivot_colonna >= 0; pivot_colonna-- ){
+		r = righe_trovate;
+		while( r < row && matrix[r*col+pivot_colonna] == 0 ){   //m[r][pivot_colonna]
+			r++;
+			
+		}
+		// ho trovato la prima riga con elemento non nullo in posizione r e pivot_colonna oppure non esiste nessuna riga con elemento non nullo in posizione pivot_colonna
+		
+		if( r < row ){ //significa che ho trovato un valore non nullo
+			if( r != righe_trovate ){
+				swap_rows_GPU(matrix,row,col,righe_trovate,r); //sposto la riga appena trovata nella posizone corretta
+				flag = 1;
+				if( v != NULL ){
+					tmp = v[righe_trovate];
+					v[righe_trovate] = v[r];
+					v[r] = tmp;
+				}				
+			}			
+			pivot_riga = righe_trovate;
+			righe_trovate++;
+
+			if( flag == 1 ){  			//riprendo la normale riduzione di gauss
+				st = righe_trovate;
+			}else{
+
+				if( st < righe_trovate ){  //se sono nella modalitá ottimizzazione e supero le prime n righe allora ritorno alla normale riduzione
+					flag = 1;
+					st = righe_trovate;
+				}
+			}
+
+			inv = invers_GPU(matrix[pivot_riga*col+pivot_colonna],module);		//inverso dell´ elemento in m[r][pivot_colonna]	
+
+			#pragma omp parallel for private(i,s,k,a)
+			for( i = st; i < row; i++ ){
+				if( matrix[i*col+pivot_colonna] != 0 ){		//m[i][pivot_colonna]
+					
+					s = mul_mod_GPU(inv,matrix[i*col+pivot_colonna],module);						
+					for( k = 0; k < pivot_colonna+1; k++ ){
+						a = mul_mod_GPU(s,matrix[pivot_riga*col+k],module);
+						matrix[i*col+k] = sub_mod_GPU(matrix[i*col+k],a,module);
+
+					}
+				}
+			}
+		}
+	}
+}
+
+void gauss_GPU(int *m, int row, int col, int module, int start, int *v){
+	
+	int matrix_length = row * col;
+	int matrix_length_bytes = matrix_length * sizeof(int);
+	
+	int *m_d;
+
+	cudaMalloc( (void **) &m_d, matrix_length_bytes);
+	cudaMemcpy(m_d, m, matrix_length_bytes, cudaMemcpyHostToDevice);
+	
+	//kernel
+	gauss_kernel<<<1,1>>>(m_d, row, col, module, start, v, row*col);
+
+	cudaMemcpy(m, m_d, matrix_length_bytes, cudaMemcpyDeviceToHost);
+
+	cudaFree(m_d);
+
+
+}
 
 /*  effettua la riduzione di gauss della matrice m in place
     parametro start viene utilizzato per ottimizzare l'agloritmo:
@@ -911,7 +1061,8 @@ void execute_standard(int **matrix, int * row, int col, struct map map, int *deg
 		start = clock();
 
 		//applico la riduzione di Gauss
-		gauss(*matrix, *row, col, module, st, NULL);
+		//gauss(*matrix, *row, col, module, st, NULL);
+		gauss_GPU(*matrix, *row, col, module, st, NULL);
 		//elimino le righe nulle della matrice
 		eliminate_null_rows(matrix, row, col);
 		
@@ -1044,6 +1195,8 @@ int main (int argc, char *argv[]){
 
 	free(matrix);
 	free(degree);
+	cudaDeviceReset();
+
 	return 0;
 }
 
