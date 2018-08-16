@@ -10,6 +10,7 @@
 #include <cuda_runtime.h>
 
 // compilazione nvcc gm.cu -o gm -w -Xcompiler " -openmp"
+// nvcc gm.cu -o gm -w -Xcompiler " -openmp" -gencode arch=compute_61,code=sm_61 -lcudadevrt -rdc=true
 
 
 
@@ -808,6 +809,24 @@ __device__ int mul_mod_GPU(int a, int b, int p){
 	return mod_GPU((a*b),p);
 }
 
+__global__ void riduzione_kernel(int *matrix, int row, int col, int dim, int module, int start, int pivot_colonna, int inv, int pivot_riga){
+
+	int a = 0, s = 0;
+	int last_row = row - 1;
+	int row_index =  last_row - (blockDim.x * blockIdx.x + threadIdx.x); 
+	if(row_index >= start && row_index < row){
+		
+		int row_linear_index = row_index * col + pivot_colonna;
+		if( matrix[row_linear_index] != 0 ){					
+			s = mul_mod_GPU(inv,matrix[row_linear_index],module);						
+			for(int k = 0; k < pivot_colonna+1; k++ ){
+				a = mul_mod_GPU(s,matrix[pivot_riga*col+k],module);
+				matrix[row_index*col+k] = sub_mod_GPU(matrix[row_index*col+k],a,module);		
+			}
+		}
+	}
+}
+
 
 __global__ void gauss_kernel(int *matrix, int row, int col,int module, int start, int*v, int dim){
 		
@@ -853,8 +872,25 @@ __global__ void gauss_kernel(int *matrix, int row, int col,int module, int start
 			}
 
 			inv = invers_GPU(matrix[pivot_riga*col+pivot_colonna],module);		//inverso dell´ elemento in m[r][pivot_colonna]	
+			
+			/*
+			dim3 threads(32,16);
+			dim3 blocks(1,2);
+			*/
+			int numero_righe = row - righe_trovate;
+			int t = (numero_righe < 512 ? numero_righe : 512);
+			//int b = (t < 512 ? 1 : (numero_righe/512) ); 
+			int b = 1;			
+			if( t == 512 && numero_righe != 512 ){
+				b = numero_righe / 512 + 1;
+			}
 
-			#pragma omp parallel for private(i,s,k,a)
+			dim3 threads(t);
+			dim3 blocks(b);
+
+			riduzione_kernel<<<blocks, threads>>>(matrix, row, col, dim, module, righe_trovate, pivot_colonna, inv, pivot_riga);
+			cudaDeviceSynchronize();
+			/*
 			for( i = st; i < row; i++ ){
 				if( matrix[i*col+pivot_colonna] != 0 ){		//m[i][pivot_colonna]
 					
@@ -866,12 +902,14 @@ __global__ void gauss_kernel(int *matrix, int row, int col,int module, int start
 					}
 				}
 			}
+			*/
+
 		}
 	}
 }
 
 void gauss_GPU(int *m, int row, int col, int module, int start, int *v){
-	
+
 	int matrix_length = row * col;
 	int matrix_length_bytes = matrix_length * sizeof(int);
 	
@@ -881,6 +919,10 @@ void gauss_GPU(int *m, int row, int col, int module, int start, int *v){
 	cudaMemcpy(m_d, m, matrix_length_bytes, cudaMemcpyHostToDevice);
 	
 	//kernel
+	/*
+		1 thread -> 2.1 sec
+		row thread -> 
+	*/
 	gauss_kernel<<<1,1>>>(m_d, row, col, module, start, v, row*col);
 
 	cudaMemcpy(m, m_d, matrix_length_bytes, cudaMemcpyDeviceToHost);
@@ -1088,7 +1130,11 @@ void execute_standard(int **matrix, int * row, int col, struct map map, int *deg
 		else{
 			old_v = new_v;
 			}
-	
+/*
+		if(n_round == 2){
+			flag=1;
+		}
+*/
 	}
 	for (int i = 0; i < n_round+1; i++)
 		free(m_deg_array[i]);	
