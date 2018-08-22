@@ -8,6 +8,6 @@ Execute
 > ./gm --input input_file --output output_file
 
 Performance delle varie tipologie dei kernel su input contenuto nel file input.txt
-1 solo thread per tutto il kernel -> 2.1 sec
-1 thread per riga da ridurre -> 1.1 sec
-1 thread per cella della matrice da ridurre -> TODO
+- 1 solo thread per tutto il kernel -> 2.1 sec
+- 1 thread per riga da ridurre -> 1.1 sec
+- 1 thread per cella della matrice da ridurre -> TODO
