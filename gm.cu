@@ -887,7 +887,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
    }
 }
 
-__global__ void riduzione_kernel(int *matrix, int row, int col, int dim, int module, int start, int pivot_colonna, int inv, int pivot_riga){
+__global__ void kernel_riduzione_riga(int *matrix, int row, int col, int dim, int module, int start, int pivot_colonna, int inv, int pivot_riga){
 
 	int a = 0, s = 0;
 	int last_row = row - 1;
@@ -902,6 +902,21 @@ __global__ void riduzione_kernel(int *matrix, int row, int col, int dim, int mod
 				matrix[row_index*col+k] = sub_mod_GPU(matrix[row_index*col+k],a,module);		
 			}
 
+		}
+	}
+}
+
+__global__ void kernel_riduzione_cella(int *matrix, int row, int col, int dim, int module, int inv, int pivot_colonna, int pivot_riga){
+
+	int starting_row = pivot_riga + 1;
+	int idx = blockIdx.x * blockDim.x + threadIdx.x;
+	int idy = blockIdx.y * blockDim.y + threadIdx.y + starting_row; 
+	if( idx < (pivot_colonna+1)  && idy < row){
+		int div = matrix[idy*col+pivot_colonna];
+		if( div != 0 ){
+			int s = mul_mod_GPU(inv, div, module);
+			int a = mul_mod_GPU(s, matrix[pivot_riga*col+idx], module);
+			matrix[idy*col+idx] = sub_mod_GPU(matrix[idy*col+idx], a, module);
 		}
 	}
 }
@@ -952,6 +967,9 @@ __global__ void gauss_kernel(int *matrix, int row, int col, int module, int star
 
 			inv = invers_GPU(matrix[pivot_riga*col+pivot_colonna],module);		//inverso dell´ elemento in m[r][pivot_colonna]	
 
+
+/*
+			//kernel per riduzione righe	
 			int numero_righe = row - righe_trovate;
 			int t = (numero_righe < 1024 ? numero_righe : 1024);
 			//int b = (t < 512 ? 1 : (numero_righe/512) ); 
@@ -962,9 +980,24 @@ __global__ void gauss_kernel(int *matrix, int row, int col, int module, int star
 
 			dim3 threads(t);
 			dim3 blocks(b);
-			riduzione_kernel<<<blocks, threads>>>(matrix, row, col, dim, module, righe_trovate, pivot_colonna, inv, pivot_riga);
-	        //gpuErrchk(cudaGetLastError());
+			kernel_riduzione_riga<<<blocks, threads>>>(matrix, row, col, dim, module, righe_trovate, pivot_colonna, inv, pivot_riga);
 			cudaDeviceSynchronize();
+
+*/
+			
+			//kernel per riduzione celle
+			dim3 threads(16,32,1);
+			int block_dim = 512;
+			int numero_righe = row - righe_trovate;
+			int grid_y = row/32 + 1;
+			int grid_x = col/16 + 1;
+			dim3 blocks(grid_x, grid_y,1);
+
+			kernel_riduzione_cella<<<blocks, threads>>>(matrix, row, col, dim, module, inv, pivot_colonna, pivot_riga);
+			cudaDeviceSynchronize();
+		
+			
+		
 			/*
 			for( i = st; i < row; i++ ){
 				if( matrix[i*col+pivot_colonna] != 0 ){		//m[i][pivot_colonna]
@@ -982,6 +1015,8 @@ __global__ void gauss_kernel(int *matrix, int row, int col, int module, int star
 		}
 	}
 }
+
+
 
 void gauss_GPU(int *m, int row, int col, int module, int start, int *v){
 
@@ -1213,7 +1248,7 @@ void execute_standard(int **matrix, int * row, int col, struct map map, int *deg
 		else{
 			old_v = new_v;
 			}
-
+		
 	/*	
 		if(n_round == 2){
 			flag=1;
