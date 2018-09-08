@@ -796,6 +796,43 @@ __device__ void swap_rows_GPU(int *m, int row, int col, int j, int i){
 	}
 }
 
+int mod_long(long long n, int p) {
+	long long v = n, x = 0;
+
+	if (v >= p) {
+		v = n % p;
+	}
+	else {
+		if (v < 0) {
+			x = n / p;
+			v = n - (x*p);
+			v += p;
+		}
+	}
+	int r = v;
+	return r;
+}
+
+
+//n mod p 
+//Riduzione di n in modulo p.
+__device__ int mod_long_GPU(long long n, long long p) {
+	long long v = n, x = 0;
+
+	if (v >= p) {
+		v = n % p;
+	}
+	else {
+		if (v < 0) {
+			x = n / p;
+			v = n - (x*p);
+			v += p;
+		}
+	}
+	int r = v;
+	return r;
+}
+
 
 //n mod p 
 //Riduzione di n in modulo p.
@@ -839,13 +876,19 @@ int add_mod(int a, int b, int p){
 // a - b mod p
 //sottrazione di a e b in modulo p
 int sub_mod(int a, int b, int p){
-	return mod((a-b),p);
+	long long aa,bb;
+	aa = a;
+	bb = b;
+	return mod_long((aa-bb),p);
 }
 
 // a * b mod p
 //prodotto di a e b in modulo p
 int mul_mod(int a, int b, int p){
-	return mod((a*b),p);
+	long long aa,bb;
+	aa = a;
+	bb = b;
+	return mod_long((aa*bb),p);
 }
 
 
@@ -873,38 +916,21 @@ __device__ int add_mod_GPU(int a, int b, int p){
 // a - b mod p
 //sottrazione di a e b in modulo p
 __device__ int sub_mod_GPU(int a, int b, int p){
-	return mod_GPU((a-b),p);
+	long long aa,bb;
+	aa = a;
+	bb = b;
+	return mod_long_GPU((aa-bb),p);
 }
 
 // a * b mod p
 //prodotto di a e b in modulo p
 __device__ int mul_mod_GPU(int a, int b, int p){
-	return mod_GPU((a*b),p);
+	long long aa,bb;
+	aa = a;
+	bb = b;
+	return mod_long_GPU((aa*bb),p);
 }
 
-
-//n mod p 
-//Riduzione di n in modulo p.
-__device__ int long_mod_GPU(long long n, long long p) {
-	long long v = n, x = 0;
-
-	if (v >= p) {
-		v = n % p;
-	}
-	else {
-		if (v < 0) {
-			x = n / p;
-			v = n - (x*p);
-			v += p;
-		}
-	}
-	return int (v);
-}
-
-
-__device__ int long_mul_mod_GPU(int a, int b, int p){
-	return mod_GPU(((long long)a*(long long)b),p);
-}
 
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
@@ -1057,7 +1083,7 @@ __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, in
 				}
 			}
 
-			printf("Elemento di pivot m[%d][%d]= %d\n", pivot_riga, pivot_colonna, matrix[pivot_riga*col+pivot_colonna]);
+			//printf("Elemento di pivot m[%d][%d]= %d\n", pivot_riga, pivot_colonna, matrix[pivot_riga*col+pivot_colonna]);
 
 			inv = invers_GPU(matrix[pivot_riga*col+pivot_colonna],module);		//inverso dell´ elemento in m[r][pivot_colonna]	
 
@@ -1380,7 +1406,7 @@ void execute_standard(int **matrix, int * row, int col, struct map map, int *deg
 			old_v = new_v;
 			}
 
-		flag = 1;
+		//flag = 1;
 	/*	
 		if(n_round == 2){
 			flag=1;
