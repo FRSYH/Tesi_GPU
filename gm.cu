@@ -962,6 +962,7 @@ __global__ void kernel_riduzione_riga(int *matrix, int row, int col, int dim, in
 	}
 }
 
+//comment
 __global__ void kernel_riduzione_cella(int *matrix, int row, int col, int dim, int module, int inv, int pivot_colonna, int pivot_riga){
 
 	int starting_row = pivot_riga + 1;
