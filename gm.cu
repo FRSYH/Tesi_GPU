@@ -962,7 +962,21 @@ __global__ void kernel_riduzione_riga(int *matrix, int row, int col, int dim, in
 	}
 }
 
-//comment
+/*
+	Ottimizzazzioni :
+		- branch divergence 
+		Invocations                                Event Name         Min         Max         Avg       Total
+			Device "GeForce GTX 1050 (0)"
+		    Kernel: gauss_kernel_celle(int*, int, int, int, int, int*, int)
+		        4                                    branch    25341945  2917724148  1245558930  4982235722
+		        4                          divergent_branch       35578    40112192    12379293    49517175
+
+		Invocations                               Metric Name                        Metric Description         Min         Max         Avg
+			Device "GeForce GTX 1050 (0)"
+    		Kernel: gauss_kernel_celle(int*, int, int, int, int, int*, int)
+          		4                         branch_efficiency                         Branch Efficiency      98.63%      99.86%      99.40%
+
+*/
 __global__ void kernel_riduzione_cella(int *matrix, int row, int col, int dim, int module, int inv, int pivot_colonna, int pivot_riga){
 
 	int starting_row = pivot_riga + 1;
