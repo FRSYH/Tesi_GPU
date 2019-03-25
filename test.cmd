@@ -1,0 +1,1 @@
+FOR %%G IN (A B C D E F G H I J K) DO gm --input input/input%%G.txt --output test/%1/output%%G.txt

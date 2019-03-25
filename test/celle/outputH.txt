@@ -1,0 +1,36 @@
+
+Inizializzazione in 0.001000 sec
+
+Mappa creata in 0.015000 sec,   560 x 560 
+
+Inizio computazione, metodo standard
+
+ -Eseguo moltiplicazione, numero righe: 388     (0.001000 sec)
+ -Eseguo Gauss, numero righe: 376               (0.327000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13 }
+
+ -Eseguo moltiplicazione, numero righe: 3409     (0.014000 sec)
+ -Eseguo Gauss, numero righe: 390               (0.205000 sec)
+Gradi della matrice = { 3  4  5  6  7  8  9  10  11  12  13 }
+
+ -Eseguo moltiplicazione, numero righe: 2409     (0.008000 sec)
+ -Eseguo Gauss, numero righe: 453               (0.129000 sec)
+Gradi della matrice = { 3  4  5  6  7  8  9  10  11  12  13 }
+
+ -Eseguo moltiplicazione, numero righe: 3039     (0.010000 sec)
+ -Eseguo Gauss, numero righe: 554               (0.166000 sec)
+Gradi della matrice = { 2  3  4  5  6  7  8  9  10  11  12  13 }
+
+ -Eseguo moltiplicazione, numero righe: 1901     (0.006000 sec)
+ -Eseguo Gauss, numero righe: 560               (0.061000 sec)
+Gradi della matrice = { 1  2  3  4  5  6  7  8  9  10  11  12  13 }
+
+Target raggiunto, soluzione trovata in 0.930000 sec
+
+5603 5015 2311 8786 
+
+9640 6116 2880 
+
+2803 9733 
+
+

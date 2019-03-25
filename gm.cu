@@ -943,6 +943,21 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
    }
 }
 
+
+/*
+	Ottimizzazioni
+		- branch divergence
+
+	Correttezza
+		- kernel celle (calcoli errati)
+
+	Aggiunte
+		- risoluzione e stampa soluzioni delle incognite
+
+
+*/
+
+
 __global__ void kernel_riduzione_riga(int *matrix, int row, int col, int dim, int module, int start, int pivot_colonna, int inv, int pivot_riga){
 
 	int a = 0, s = 0;
@@ -962,21 +977,7 @@ __global__ void kernel_riduzione_riga(int *matrix, int row, int col, int dim, in
 	}
 }
 
-/*
-	Ottimizzazzioni :
-		- branch divergence 
-		Invocations                                Event Name         Min         Max         Avg       Total
-			Device "GeForce GTX 1050 (0)"
-		    Kernel: gauss_kernel_celle(int*, int, int, int, int, int*, int)
-		        4                                    branch    25341945  2917724148  1245558930  4982235722
-		        4                          divergent_branch       35578    40112192    12379293    49517175
 
-		Invocations                               Metric Name                        Metric Description         Min         Max         Avg
-			Device "GeForce GTX 1050 (0)"
-    		Kernel: gauss_kernel_celle(int*, int, int, int, int, int*, int)
-          		4                         branch_efficiency                         Branch Efficiency      98.63%      99.86%      99.40%
-
-*/
 __global__ void kernel_riduzione_cella(int *matrix, int row, int col, int dim, int module, int inv, int pivot_colonna, int pivot_riga){
 
 	int starting_row = pivot_riga + 1;
@@ -1204,19 +1205,13 @@ void gauss_GPU(int *m, int row, int col, int module, int start, int *v){
 	
 	int *m_d;
 
-
 	gpuErrchk(cudaMalloc( (void **) &m_d, matrix_length_bytes));
 	gpuErrchk(cudaMemcpy(m_d, m, matrix_length_bytes, cudaMemcpyHostToDevice));
 
-	//kernel
-	/*
-		1 thread -> 2.1 sec
-		1 thread per riga da ridurre -> 1.1 sec 
-	*/
 	cudaStream_t s;
 	cudaStreamCreateWithFlags(&s, cudaStreamNonBlocking);
 	cudaDeviceSetLimit(cudaLimitDevRuntimePendingLaunchCount, 30000);
-	gauss_kernel_celle<<<1,1,0,s>>>(m_d, row, col, module, start, v, row*col);
+	gauss_kernel_righe<<<1,1,0,s>>>(m_d, row, col, module, start, v, row*col);
 	cudaDeviceSynchronize();
 	gpuErrchk(cudaMemcpy(m, m_d, matrix_length_bytes, cudaMemcpyDeviceToHost));
 
@@ -1363,7 +1358,7 @@ void execute_standard(int **matrix, int * row, int col, struct map map, int *deg
 	m_deg_array[0] = (int *)calloc(max_degree+1, sizeof(int));
 	int n_round = 0;
 	int *m_deg = m_deg_array[0];
-
+	int missing_degree = max_degree;
 	fprintf(output_file, "Inizio computazione, metodo standard\n");
 	matrix_degree(*matrix, *row, col, m_deg, monomi, numero_variabili);
 
@@ -1382,7 +1377,15 @@ void execute_standard(int **matrix, int * row, int col, struct map map, int *deg
 
 		start = clock();	
 
-		moltiplica_matrice(matrix, row, col, map, degree, monomi, numero_variabili, 0);
+		//find missing degree to multiply matrix
+			for(int i=max_degree; i>0; i--){
+				if( m_deg[i] == 0 ){
+					missing_degree = i;
+					break;
+				}
+			}
+
+		moltiplica_matrice(matrix, row, col, map, degree, monomi, numero_variabili, missing_degree);
 
 		end = clock();
 		elapsed =  ((double)(end - start)) / CLOCKS_PER_SEC;
@@ -1566,7 +1569,7 @@ int main (int argc, char *argv[]){
 	fprintf(output_file, "\nTarget raggiunto, soluzione trovata in %f sec\n\n", elapsed);
 
 	//print_matrix(matrix, row, col, output_file);
-	//print_incognite(matrix, row, col, numero_variabili, monomi, output_file);
+	print_incognite(matrix, row, col, numero_variabili, monomi, output_file);
 	for(int i=0; i<row*col; i++){
 		if(matrix[i] > module){
 			printf("OVERFLOW\n");

@@ -17,5 +17,7 @@ int main() {
            2.0*prop.memoryClockRate*(prop.memoryBusWidth/8)/1.0e6);
 
     printf(" SharedMemPerBlock: %zu\n", prop.sharedMemPerBlock);
+
+    printf("multiProcessorCount %d\n", prop.multiProcessorCount);
   }
 }
