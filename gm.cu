@@ -954,6 +954,8 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 	Aggiunte
 		- risoluzione e stampa soluzioni delle incognite
 
+	Test
+		- performance al variare della dimensione di grid e block
 
 */
 
@@ -1103,13 +1105,14 @@ __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, in
 
 			inv = invers_GPU(matrix[pivot_riga*col+pivot_colonna],module);		//inverso dell´ elemento in m[r][pivot_colonna]	
 
+			int block_dim = 1024;
 			//kernel per riduzione righe	
 			int numero_righe = row - righe_trovate;
-			int t = (numero_righe < 1024 ? numero_righe : 1024);
+			int t = (numero_righe < block_dim ? numero_righe : block_dim);
 			//int b = (t < 512 ? 1 : (numero_righe/512) ); 
 			int b = 1;			
-			if( t == 1024 && numero_righe != 1024 ){
-				b = numero_righe / 1024 + 1;
+			if( t == block_dim && numero_righe != block_dim ){
+				b = numero_righe / block_dim + 1;
 			}
 
 			//printf("Numero di thread lanciati: %d\n", b*t);
