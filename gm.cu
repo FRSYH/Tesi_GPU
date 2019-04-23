@@ -1152,7 +1152,7 @@ void gauss_GPU(int *m, int row, int col, int module, int start, int *v){
 	cudaStream_t s;
 	cudaStreamCreateWithFlags(&s, cudaStreamNonBlocking);
 	cudaDeviceSetLimit(cudaLimitDevRuntimePendingLaunchCount, 30000);
-	gauss_kernel_celle<<<1,1,0,s>>>(m_d, row, col, module, start, v, row*col);
+	gauss_kernel_righe<<<1,1,0,s>>>(m_d, row, col, module, start, v, row*col);
 	cudaDeviceSynchronize();
 	gpuErrchk(cudaMemcpy(m, m_d, matrix_length_bytes, cudaMemcpyDeviceToHost));
 
