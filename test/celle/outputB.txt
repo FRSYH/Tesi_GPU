@@ -6,27 +6,27 @@ Mappa creata in 0.002000 sec,   165 x 165
 Inizio computazione, metodo standard
 
  -Eseguo moltiplicazione, numero righe: 110     (0.000000 sec)
- -Eseguo Gauss, numero righe: 109               (0.323000 sec)
+ -Eseguo Gauss, numero righe: 109               (0.247000 sec)
 Gradi della matrice = { 4  5  6  7  8 }
 
  -Eseguo moltiplicazione, numero righe: 569     (0.001000 sec)
- -Eseguo Gauss, numero righe: 119               (0.014000 sec)
+ -Eseguo Gauss, numero righe: 119               (0.011000 sec)
 Gradi della matrice = { 4  5  6  7  8 }
 
- -Eseguo moltiplicazione, numero righe: 669     (0.002000 sec)
- -Eseguo Gauss, numero righe: 146               (0.018000 sec)
-Gradi della matrice = { 3  4  5  6  7  8 }
+ -Eseguo moltiplicazione, numero righe: 669     (0.000000 sec)
+ -Eseguo Gauss, numero righe: 145               (0.012000 sec)
+Gradi della matrice = { 4  5  6  7  8 }
 
- -Eseguo moltiplicazione, numero righe: 839     (0.002000 sec)
- -Eseguo Gauss, numero righe: 165               (0.012000 sec)
+ -Eseguo moltiplicazione, numero righe: 1189     (0.001000 sec)
+ -Eseguo Gauss, numero righe: 164               (0.012000 sec)
 Gradi della matrice = { 1  2  3  4  5  6  7  8 }
 
-Target raggiunto, soluzione trovata in 0.372000 sec
+Target raggiunto, soluzione trovata in 0.284000 sec
 
-1076 285 1248 585 
+1792 625 347 519 
 
-1507 884 460 
+534 1901 1828 
 
-298 772 
+1577 1967 
 
 

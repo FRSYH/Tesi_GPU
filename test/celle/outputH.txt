@@ -1,36 +1,40 @@
 
-Inizializzazione in 0.001000 sec
+Inizializzazione in 0.000000 sec
 
-Mappa creata in 0.015000 sec,   560 x 560 
+Mappa creata in 0.016000 sec,   560 x 560 
 
 Inizio computazione, metodo standard
 
  -Eseguo moltiplicazione, numero righe: 388     (0.001000 sec)
- -Eseguo Gauss, numero righe: 376               (0.327000 sec)
+ -Eseguo Gauss, numero righe: 376               (0.277000 sec)
 Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13 }
 
- -Eseguo moltiplicazione, numero righe: 3409     (0.014000 sec)
- -Eseguo Gauss, numero righe: 390               (0.205000 sec)
+ -Eseguo moltiplicazione, numero righe: 3409     (0.009000 sec)
+ -Eseguo Gauss, numero righe: 388               (0.201000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13 }
+
+ -Eseguo moltiplicazione, numero righe: 3529     (0.009000 sec)
+ -Eseguo Gauss, numero righe: 433               (0.200000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13 }
+
+ -Eseguo moltiplicazione, numero righe: 4429     (0.012000 sec)
+ -Eseguo Gauss, numero righe: 508               (0.242000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13 }
+
+ -Eseguo moltiplicazione, numero righe: 5929     (0.015000 sec)
+ -Eseguo Gauss, numero righe: 550               (0.251000 sec)
 Gradi della matrice = { 3  4  5  6  7  8  9  10  11  12  13 }
 
- -Eseguo moltiplicazione, numero righe: 2409     (0.008000 sec)
- -Eseguo Gauss, numero righe: 453               (0.129000 sec)
-Gradi della matrice = { 3  4  5  6  7  8  9  10  11  12  13 }
-
- -Eseguo moltiplicazione, numero righe: 3039     (0.010000 sec)
- -Eseguo Gauss, numero righe: 554               (0.166000 sec)
-Gradi della matrice = { 2  3  4  5  6  7  8  9  10  11  12  13 }
-
- -Eseguo moltiplicazione, numero righe: 1901     (0.006000 sec)
- -Eseguo Gauss, numero righe: 560               (0.061000 sec)
+ -Eseguo moltiplicazione, numero righe: 4009     (0.009000 sec)
+ -Eseguo Gauss, numero righe: 559               (0.149000 sec)
 Gradi della matrice = { 1  2  3  4  5  6  7  8  9  10  11  12  13 }
 
-Target raggiunto, soluzione trovata in 0.930000 sec
+Target raggiunto, soluzione trovata in 1.376000 sec
 
-5603 5015 2311 8786 
+6916 8715 11284 6866 
 
-9640 6116 2880 
+6544 8838 5958 
 
-2803 9733 
+1672 1196 
 
 

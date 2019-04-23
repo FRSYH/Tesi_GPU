@@ -964,7 +964,8 @@ __global__ void kernel_riduzione_riga(int *matrix, int row, int col, int dim, in
 
 	int a = 0, s = 0;
 	int last_row = row - 1;
-	int row_index =  last_row - (blockDim.x * blockIdx.x + threadIdx.x); 
+	//int row_index =  last_row - (blockDim.x * blockIdx.x + threadIdx.x); 
+	int row_index = (pivot_riga + 1) + (blockDim.x * blockIdx.x + threadIdx.x);
 	if(row_index >= start && row_index < row){
 		
 		int row_linear_index = row_index * col + pivot_colonna;
@@ -980,12 +981,14 @@ __global__ void kernel_riduzione_riga(int *matrix, int row, int col, int dim, in
 }
 
 
-__global__ void kernel_riduzione_cella(int *matrix, int row, int col, int dim, int module, int inv, int pivot_colonna, int pivot_riga){
+__global__ void kernel_riduzione_cella(int *matrix, int row, int col, int dim, int module, int inv, int pivot_colonna, int pivot_riga, int start){
 
+	int last_row = row - 1;
 	int starting_row = pivot_riga + 1;
 	int idx = blockIdx.x * blockDim.x + threadIdx.x;
 	int idy = blockIdx.y * blockDim.y + threadIdx.y + starting_row; 
-	if( idx < (pivot_colonna+1)  && idy < row){
+
+	if( idx < pivot_colonna  && idy < row && idy > pivot_riga){		//fermo i thread prima di pivot_colonna per impedire di sovrascrivere il dato necessario per s
 		int div = matrix[idy*col+pivot_colonna];
 		if( div != 0 ){
 			int s = mul_mod_GPU(inv, div, module);
@@ -1042,15 +1045,23 @@ __global__ void gauss_kernel_celle(int *matrix, int row, int col, int module, in
 			inv = invers_GPU(matrix[pivot_riga*col+pivot_colonna],module);		//inverso dell´ elemento in m[r][pivot_colonna]	
 
 			//kernel per riduzione celle
-			dim3 threads(16,32,1);
-			int block_dim = 512;
+			int block_dim = 16;
+			dim3 threads(block_dim, block_dim, 1);
+			int block_size = 256;
 			int numero_righe = row - righe_trovate;
-			int grid_y = row/32 + 1;
-			int grid_x = col/16 + 1;
+			int grid_y = numero_righe/block_dim + 1;
+			int grid_x = col/block_dim + 1;
 			dim3 blocks(grid_x, grid_y,1);
 
-			kernel_riduzione_cella<<<blocks, threads>>>(matrix, row, col, dim, module, inv, pivot_colonna, pivot_riga);
+			//printf("Tot celle:%d, Tot thread:%d\n",numero_righe*col,  grid_y*grid_x*block_size);
+			
+			kernel_riduzione_cella<<<blocks, threads>>>(matrix, row, col, dim, module, inv, pivot_colonna, pivot_riga, righe_trovate);
 			cudaDeviceSynchronize();
+
+			//necessario azzerare tutta la colonna (pivot_colonna)
+			for(int x = pivot_riga + 1; x < row; x++){
+				matrix[x*col+pivot_colonna] = 0;
+			}
 
 		}
 	}
@@ -1127,79 +1138,6 @@ __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, in
 }
 
 
-void gauss_GPU2(int *matrix, int row, int col, int module, int start, int *v){
-	int pivot_riga = 0,r = 0,righe_trovate = 0,i,k;
-	int s,inv,a;
-	int st,flag=0,invarianti=0,flag2=0,tmp;
-	int dim = row*col;
-
-	int matrix_length = row * col;
-	int matrix_length_bytes = matrix_length * sizeof(int);
-	
-	int *m_d;
-
-	if( start == 0 ){
-		flag = 1;
-	}else{
-		st = start;
-	}
-
-	for(int pivot_colonna = col-1; pivot_colonna >= 0; pivot_colonna-- ){
-		r = righe_trovate;
-		while( r < row && matrix[r*col+pivot_colonna] == 0 ){   //m[r][pivot_colonna]
-			r++;
-			
-		}
-		// ho trovato la prima riga con elemento non nullo in posizione r e pivot_colonna oppure non esiste nessuna riga con elemento non nullo in posizione pivot_colonna
-		
-		if( r < row ){ //significa che ho trovato un valore non nullo
-			if( r != righe_trovate ){
-				swap_rows(matrix,row,col,righe_trovate,r); //sposto la riga appena trovata nella posizone corretta
-				flag = 1;
-				if( v != NULL ){
-					tmp = v[righe_trovate];
-					v[righe_trovate] = v[r];
-					v[r] = tmp;
-				}				
-			}			
-			pivot_riga = righe_trovate;
-			righe_trovate++;
-
-			if( flag == 1 ){  			//riprendo la normale riduzione di gauss
-				st = righe_trovate;
-			}else{
-
-				if( st < righe_trovate ){  //se sono nella modalitá ottimizzazione e supero le prime n righe allora ritorno alla normale riduzione
-					flag = 1;
-					st = righe_trovate;
-				}
-			}
-
-			inv = invers(matrix[pivot_riga*col+pivot_colonna],module);		//inverso dell´ elemento in m[r][pivot_colonna]	
-
-			//kernel per riduzione righe	
-			int numero_righe = row - righe_trovate;
-			int t = (numero_righe < 1024 ? numero_righe : 1024);
-			//int b = (t < 512 ? 1 : (numero_righe/512) ); 
-			int b = 1;			
-			if( t == 1024 && numero_righe != 1024 ){
-				b = numero_righe / 1024 + 1;
-			}
-
-			dim3 threads(t);
-			dim3 blocks(b);
-
-			gpuErrchk(cudaMalloc( (void **) &m_d, matrix_length_bytes));
-			gpuErrchk(cudaMemcpy(m_d, matrix, matrix_length_bytes, cudaMemcpyHostToDevice));
-			
-			kernel_riduzione_riga<<<blocks, threads>>>(m_d, row, col, dim, module, righe_trovate, pivot_colonna, inv, pivot_riga);
-			cudaDeviceSynchronize();
-			gpuErrchk(cudaMemcpy(matrix, m_d, matrix_length_bytes, cudaMemcpyDeviceToHost));
-
-			gpuErrchk(cudaFree(m_d));
-		}
-	}
-}	
 
 void gauss_GPU(int *m, int row, int col, int module, int start, int *v){
 
@@ -1214,7 +1152,7 @@ void gauss_GPU(int *m, int row, int col, int module, int start, int *v){
 	cudaStream_t s;
 	cudaStreamCreateWithFlags(&s, cudaStreamNonBlocking);
 	cudaDeviceSetLimit(cudaLimitDevRuntimePendingLaunchCount, 30000);
-	gauss_kernel_righe<<<1,1,0,s>>>(m_d, row, col, module, start, v, row*col);
+	gauss_kernel_celle<<<1,1,0,s>>>(m_d, row, col, module, start, v, row*col);
 	cudaDeviceSynchronize();
 	gpuErrchk(cudaMemcpy(m, m_d, matrix_length_bytes, cudaMemcpyDeviceToHost));
 
