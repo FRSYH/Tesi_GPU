@@ -961,7 +961,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 
 
 __global__ void kernel_riduzione_riga(int *matrix, int row, int col, int dim, int module, int start, int pivot_colonna, int inv, int pivot_riga){
-
+/*
 	int a = 0, s = 0;
 	int last_row = row - 1;
 	//int row_index =  last_row - (blockDim.x * blockIdx.x + threadIdx.x); 
@@ -978,6 +978,27 @@ __global__ void kernel_riduzione_riga(int *matrix, int row, int col, int dim, in
 
 		}
 	}
+*/
+
+	int a = 0, s = 0;
+
+	int last_row = row - 1;
+	//int row_index =  last_row - (blockDim.x * blockIdx.x + threadIdx.x); 
+	int row_index = (pivot_riga + 1) + (blockDim.x * blockIdx.x + threadIdx.x);
+	if(row_index >= start && row_index < row){
+		
+		int row_linear_index = row_index * col + pivot_colonna;
+		if( matrix[row_linear_index] != 0 ){					
+			s = mod_long_GPU( (long long) inv * (long long) matrix[row_linear_index], module);
+			
+			for(int k = 0; k < pivot_colonna+1; k++ ){
+				a = mod_long_GPU( (long long) s * (long long) matrix[pivot_riga*col+k], module);
+				matrix[row_index*col+k] = mod_long_GPU( (long long) matrix[row_index*col+k] - (long long) a, module);		
+			}
+
+		}
+	}
+
 }
 
 
