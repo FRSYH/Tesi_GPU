@@ -960,8 +960,21 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 */
 
 
-__global__ void kernel_riduzione_riga(int *matrix, int row, int col, int dim, int module, int start, int pivot_colonna, int inv, int pivot_riga){
-/*
+__global__ void kernel_riduzione_riga(int *matrix, int row, int col, int dim, int module, int start, int pivot_colonna, int inv, int pivot_riga, int cell_per_thread){
+
+
+	extern __shared__ int smem[];
+	if( (threadIdx.x * cell_per_thread) <= pivot_colonna){
+		int row_offset = pivot_riga*col;
+		int thread_offset = threadIdx.x * cell_per_thread; 
+		//allocazione della smem con la riga di pivot, ogni thread copia una porzione di riga pari a "cell_per_thread".
+		for(int i=0; i<cell_per_thread; i++){
+			smem[thread_offset + i] = matrix[row_offset + thread_offset + i];
+		} 
+	}
+
+	__syncthreads();
+
 	int a = 0, s = 0;
 	int last_row = row - 1;
 	//int row_index =  last_row - (blockDim.x * blockIdx.x + threadIdx.x); 
@@ -972,28 +985,9 @@ __global__ void kernel_riduzione_riga(int *matrix, int row, int col, int dim, in
 		if( matrix[row_linear_index] != 0 ){					
 			s = mul_mod_GPU(inv,matrix[row_linear_index],module);						
 			for(int k = 0; k < pivot_colonna+1; k++ ){
-				a = mul_mod_GPU(s,matrix[pivot_riga*col+k],module);
+				//a = mul_mod_GPU(s,matrix[pivot_riga*col+k],module);
+				a = mul_mod_GPU(s, smem[k], module);
 				matrix[row_index*col+k] = sub_mod_GPU(matrix[row_index*col+k],a,module);		
-			}
-
-		}
-	}
-*/
-
-	int a = 0, s = 0;
-
-	int last_row = row - 1;
-	//int row_index =  last_row - (blockDim.x * blockIdx.x + threadIdx.x); 
-	int row_index = (pivot_riga + 1) + (blockDim.x * blockIdx.x + threadIdx.x);
-	if(row_index >= start && row_index < row){
-		
-		int row_linear_index = row_index * col + pivot_colonna;
-		if( matrix[row_linear_index] != 0 ){					
-			s = mod_long_GPU( (long long) inv * (long long) matrix[row_linear_index], module);
-			
-			for(int k = 0; k < pivot_colonna+1; k++ ){
-				a = mod_long_GPU( (long long) s * (long long) matrix[pivot_riga*col+k], module);
-				matrix[row_index*col+k] = mod_long_GPU( (long long) matrix[row_index*col+k] - (long long) a, module);		
 			}
 
 		}
@@ -1151,7 +1145,13 @@ __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, in
 
 			dim3 threads(t);
 			dim3 blocks(b);
-			kernel_riduzione_riga<<<blocks, threads>>>(matrix, row, col, dim, module, righe_trovate, pivot_colonna, inv, pivot_riga);
+
+			int pivot_length = pivot_colonna + 1;
+			int cell_per_thread = ( t > pivot_length ) ? 1 : ( pivot_length / t) + 1; 
+			int shared_mem = pivot_length * sizeof(int);
+
+			//printf("pivot_length = %d, t = %d ,cell_per_thread = %d\n",pivot_length, t, cell_per_thread);
+			kernel_riduzione_riga<<<blocks, threads, shared_mem>>>(matrix, row, col, dim, module, righe_trovate, pivot_colonna, inv, pivot_riga, cell_per_thread);
 			cudaDeviceSynchronize();
 
 		}
