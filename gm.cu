@@ -966,10 +966,12 @@ __global__ void kernel_riduzione_riga(int *matrix, int row, int col, int dim, in
 	extern __shared__ int smem[];
 	if( (threadIdx.x * cell_per_thread) <= pivot_colonna){
 		int row_offset = pivot_riga*col;
-		int thread_offset = threadIdx.x * cell_per_thread; 
+		int thread_offset = threadIdx.x * cell_per_thread;
 		//allocazione della smem con la riga di pivot, ogni thread copia una porzione di riga pari a "cell_per_thread".
 		for(int i=0; i<cell_per_thread; i++){
-			smem[thread_offset + i] = matrix[row_offset + thread_offset + i];
+			if(thread_offset + i <= pivot_colonna){
+				smem[thread_offset + i] = matrix[row_offset + thread_offset + i];
+			}
 		} 
 	}
 
@@ -1147,10 +1149,10 @@ __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, in
 			dim3 blocks(b);
 
 			int pivot_length = pivot_colonna + 1;
-			int cell_per_thread = ( t > pivot_length ) ? 1 : ( pivot_length / t) + 1; 
+			int cell_per_thread = ( t >= pivot_length ) ? 1 : ( pivot_length / t) + 1; 
 			int shared_mem = pivot_length * sizeof(int);
 
-			//printf("pivot_length = %d, t = %d ,cell_per_thread = %d\n",pivot_length, t, cell_per_thread);
+			//printf("pivot_length = %d, t = %d ,cell_per_thread = %d, b = %d\n",pivot_length, t, cell_per_thread, b);
 			kernel_riduzione_riga<<<blocks, threads, shared_mem>>>(matrix, row, col, dim, module, righe_trovate, pivot_colonna, inv, pivot_riga, cell_per_thread);
 			cudaDeviceSynchronize();
 
@@ -1174,7 +1176,7 @@ void gauss_GPU(int *m, int row, int col, int module, int start, int *v){
 	cudaStreamCreateWithFlags(&s, cudaStreamNonBlocking);
 	cudaDeviceSetLimit(cudaLimitDevRuntimePendingLaunchCount, 30000);
 	gauss_kernel_righe<<<1,1,0,s>>>(m_d, row, col, module, start, v, row*col);
-	cudaDeviceSynchronize();
+	gpuErrchk(cudaDeviceSynchronize());
 	gpuErrchk(cudaMemcpy(m, m_d, matrix_length_bytes, cudaMemcpyDeviceToHost));
 
 	gpuErrchk(cudaFree(m_d));
