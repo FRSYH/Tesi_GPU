@@ -1,0 +1,32 @@
+
+Inizializzazione in 0.000000 sec
+
+Mappa creata in 0.001000 sec,   165 x 165 
+
+Inizio computazione, metodo standard
+
+ -Eseguo moltiplicazione, numero righe: 110     (0.001000 sec)
+ -Eseguo Gauss, numero righe: 109               (0.226000 sec)
+Gradi della matrice = { 4  5  6  7  8 }
+
+ -Eseguo moltiplicazione, numero righe: 569     (0.001000 sec)
+ -Eseguo Gauss, numero righe: 119               (0.021000 sec)
+Gradi della matrice = { 4  5  6  7  8 }
+
+ -Eseguo moltiplicazione, numero righe: 669     (0.000000 sec)
+ -Eseguo Gauss, numero righe: 145               (0.018000 sec)
+Gradi della matrice = { 4  5  6  7  8 }
+
+ -Eseguo moltiplicazione, numero righe: 1189     (0.001000 sec)
+ -Eseguo Gauss, numero righe: 164               (0.025000 sec)
+Gradi della matrice = { 1  2  3  4  5  6  7  8 }
+
+Target raggiunto, soluzione trovata in 0.293000 sec
+
+1792 625 347 519 
+
+534 1901 1828 
+
+1577 1967 
+
+

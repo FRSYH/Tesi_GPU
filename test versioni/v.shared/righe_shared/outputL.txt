@@ -1,0 +1,48 @@
+
+Inizializzazione in 0.002000 sec
+
+Mappa creata in 0.284000 sec,   2300 x 2300 
+
+Inizio computazione, metodo standard
+
+ -Eseguo moltiplicazione, numero righe: 1880     (0.016000 sec)
+ -Eseguo Gauss, numero righe: 1754               (1.815000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22 }
+
+ -Eseguo moltiplicazione, numero righe: 23478     (0.243000 sec)
+ -Eseguo Gauss, numero righe: 1794               (5.592000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22 }
+
+ -Eseguo moltiplicazione, numero righe: 24278     (0.288000 sec)
+ -Eseguo Gauss, numero righe: 1912               (6.107000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22 }
+
+ -Eseguo moltiplicazione, numero righe: 26638     (0.284000 sec)
+ -Eseguo Gauss, numero righe: 2056               (7.123000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22 }
+
+ -Eseguo moltiplicazione, numero righe: 29518     (0.326000 sec)
+ -Eseguo Gauss, numero righe: 2170               (7.494000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22 }
+
+ -Eseguo moltiplicazione, numero righe: 31798     (0.340000 sec)
+ -Eseguo Gauss, numero righe: 2248               (6.989000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22 }
+
+ -Eseguo moltiplicazione, numero righe: 33358     (0.336000 sec)
+ -Eseguo Gauss, numero righe: 2290               (6.384000 sec)
+Gradi della matrice = { 3  4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22 }
+
+ -Eseguo moltiplicazione, numero righe: 18898     (0.210000 sec)
+ -Eseguo Gauss, numero righe: 2299               (2.882000 sec)
+Gradi della matrice = { 1  2  3  4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22 }
+
+Target raggiunto, soluzione trovata in 46.468000 sec
+
+58582 18059 10415 53248 
+
+20980 17105 47118 
+
+10078 58839 
+
+
