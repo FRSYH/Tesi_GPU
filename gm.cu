@@ -995,6 +995,28 @@ __global__ void kernel_riduzione_riga(int *matrix, int row, int col, int dim, in
 		}
 	}
 
+/*
+	long long a = 0, s = 0;
+	int aa = 0;
+	int last_row = row - 1;
+	//int row_index =  last_row - (blockDim.x * blockIdx.x + threadIdx.x); 
+	int row_index = (pivot_riga + 1) + (blockDim.x * blockIdx.x + threadIdx.x);
+	if(row_index >= start && row_index < row){
+		
+		int row_linear_index = row_index * col + pivot_colonna;
+		if( matrix[row_linear_index] != 0 ){					
+			s = (long long) inv*matrix[row_linear_index];						
+			for(int k = 0; k < pivot_colonna+1; k++ ){
+				//a = mul_mod_GPU(s,matrix[pivot_riga*col+k],module);
+				a = s*( (long long) smem[k]);
+				aa = mod_long_GPU(a, (long long) module);
+				matrix[row_index*col+k] = sub_mod_GPU(matrix[row_index*col+k],aa,module);		
+			}
+
+		}
+	}
+*/
+
 }
 
 
