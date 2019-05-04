@@ -965,22 +965,41 @@ __global__ void kernel_riduzione_blocco(int *matrix, int row, int col, int dim, 
 	int a = 0, s = 0;
 	int col_index = blockIdx.x * blockDim.x + threadIdx.x;	//indice della colonna della matrice originale per il thread corrente
 	int interation = 0;
-	int reached_row = ( pivot_riga + 1) + ((blockIdx.y + 1) * thread_height); //riga raggiunta dal thread corrente
-	if(reached_row > row){
-		interation = thread_height - (reached_row - row);	//numero di iterazioni nel caso in cui la matrice non collima con la dimensione della grid
-	}else{
-		interation = thread_height;
-	}
-	int block_row_offset = (pivot_riga + 1) + blockIdx.y * thread_height;
-	int row_offset = 0;
-	for(int i=0; i<interation; i++){
-		row_offset = block_row_offset + i;
-		if( matrix[row_offset * col + pivot_colonna] != 0 ){
-			s = mul_mod_GPU(inv, matrix[row_offset * col + pivot_colonna], module);		//tutti i thread sulla stessa riga calcolano lo stesso risultato
-			a = mul_mod_GPU(s, matrix[pivot_riga * col + col_index], module);
-			matrix[row_offset * col + col_index] = sub_mod_GPU(matrix[row_offset * col + col_index], a, module);
+/*
+	if(col_index < pivot_colonna){
+		int reached_row = ( pivot_riga + 1) + ((blockIdx.y + 1) * thread_height); //riga raggiunta dal thread corrente
+		if(reached_row > row){
+			interation = thread_height - (reached_row - row);	//numero di iterazioni nel caso in cui la matrice non collima con la dimensione della grid
+		}else{
+			interation = thread_height;
+		}
+		int block_row_offset = (pivot_riga + 1) + blockIdx.y * thread_height;
+		int row_offset = 0;
+		for(int i=0; i<interation; i++){
+			row_offset = block_row_offset + i;
+			if( matrix[row_offset * col + pivot_colonna] != 0 ){
+				s = mul_mod_GPU(inv, matrix[row_offset * col + pivot_colonna], module);		//tutti i thread sulla stessa riga calcolano lo stesso risultato
+				a = mul_mod_GPU(s, matrix[pivot_riga * col + col_index], module);
+				matrix[row_offset * col + col_index] = sub_mod_GPU(matrix[row_offset * col + col_index], a, module);
+			}
 		}
 	}
+*/
+	if(col_index < pivot_colonna){
+		int block_row_offset = (pivot_riga + 1) + (blockIdx.y * thread_height);
+		int row_offset = 0;
+		for(int i=0; i<thread_height; i++){
+			row_offset = block_row_offset + i;
+			if( row_offset < row ){
+				if( matrix[row_offset * col + pivot_colonna] != 0 ){
+					s = mul_mod_GPU(inv, matrix[row_offset * col + pivot_colonna], module);		//tutti i thread sulla stessa riga calcolano lo stesso risultato
+					a = mul_mod_GPU(s, matrix[pivot_riga * col + col_index], module);
+					matrix[row_offset * col + col_index] = sub_mod_GPU(matrix[row_offset * col + col_index], a, module);
+				}
+			}
+		}
+	}
+
 
 }
 
@@ -1189,6 +1208,8 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, i
 			int block_x_axis, block_y_axis = 0;
 			if( threads_per_block == block_dim && col_to_reduce != block_dim){
 				block_x_axis = (col_to_reduce / block_dim) + 1;
+			}else{
+				block_x_axis = 1;
 			}
 
 			int thread_height = 1024;
@@ -1203,8 +1224,15 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, i
 			int shared_mem = pivot_length * sizeof(int);
 			*/
 
+			printf("threads = %d, blocco_x = %d, blocco_y = %d, pivot_colonna = %d, righe_rimaste = %d\n", threads_per_block, block_x_axis, block_y_axis, pivot_colonna, row_to_reduce);
+
 			kernel_riduzione_blocco<<<blocks, threads, 0>>>(matrix, row, col, dim, module, righe_trovate, pivot_colonna, inv, pivot_riga, thread_height);
 			cudaDeviceSynchronize();
+
+			//necessario azzerare tutta la colonna (pivot_colonna)
+			for(int x = pivot_riga + 1; x < row; x++){
+				matrix[x*col+pivot_colonna] = 0;
+			}
 
 		}
 	}
