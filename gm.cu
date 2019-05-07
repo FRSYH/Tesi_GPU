@@ -965,42 +965,28 @@ __global__ void kernel_riduzione_blocco(int *matrix, int row, int col, int dim, 
 	int a = 0, s = 0;
 	int col_index = blockIdx.x * blockDim.x + threadIdx.x;	//indice della colonna della matrice originale per il thread corrente
 	int interation = 0;
-/*
+
 	if(col_index < pivot_colonna){
+
 		int reached_row = ( pivot_riga + 1) + ((blockIdx.y + 1) * thread_height); //riga raggiunta dal thread corrente
 		if(reached_row > row){
 			interation = thread_height - (reached_row - row);	//numero di iterazioni nel caso in cui la matrice non collima con la dimensione della grid
 		}else{
 			interation = thread_height;
-		}
-		int block_row_offset = (pivot_riga + 1) + blockIdx.y * thread_height;
-		int row_offset = 0;
+		}		
+
+		int block_row_offset = (pivot_riga + 1) + (blockIdx.y * thread_height);
+		int row_offset = block_row_offset;
+			
 		for(int i=0; i<interation; i++){
-			row_offset = block_row_offset + i;
 			if( matrix[row_offset * col + pivot_colonna] != 0 ){
 				s = mul_mod_GPU(inv, matrix[row_offset * col + pivot_colonna], module);		//tutti i thread sulla stessa riga calcolano lo stesso risultato
 				a = mul_mod_GPU(s, matrix[pivot_riga * col + col_index], module);
 				matrix[row_offset * col + col_index] = sub_mod_GPU(matrix[row_offset * col + col_index], a, module);
 			}
+			row_offset ++;
 		}
 	}
-*/
-	if(col_index < pivot_colonna){
-		int block_row_offset = (pivot_riga + 1) + (blockIdx.y * thread_height);
-		int row_offset = 0;
-		for(int i=0; i<thread_height; i++){
-			row_offset = block_row_offset + i;
-			if( row_offset < row ){
-				if( matrix[row_offset * col + pivot_colonna] != 0 ){
-					s = mul_mod_GPU(inv, matrix[row_offset * col + pivot_colonna], module);		//tutti i thread sulla stessa riga calcolano lo stesso risultato
-					a = mul_mod_GPU(s, matrix[pivot_riga * col + col_index], module);
-					matrix[row_offset * col + col_index] = sub_mod_GPU(matrix[row_offset * col + col_index], a, module);
-				}
-			}
-		}
-	}
-
-
 }
 
 
@@ -1024,44 +1010,19 @@ __global__ void kernel_riduzione_riga(int *matrix, int row, int col, int dim, in
 
 	int a = 0, s = 0;
 	int last_row = row - 1;
-	//int row_index =  last_row - (blockDim.x * blockIdx.x + threadIdx.x); 
 	int row_index = (pivot_riga + 1) + (blockDim.x * blockIdx.x + threadIdx.x);
 	if(row_index >= start && row_index < row){
 		
 		int row_linear_index = row_index * col + pivot_colonna;
-		if( matrix[row_linear_index] != 0 ){					
+		if( matrix[row_linear_index] != 0 ){
 			s = mul_mod_GPU(inv,matrix[row_linear_index],module);						
 			for(int k = 0; k < pivot_colonna+1; k++ ){
 				//a = mul_mod_GPU(s,matrix[pivot_riga*col+k],module);
 				a = mul_mod_GPU(s, smem[k], module);
-				matrix[row_index*col+k] = sub_mod_GPU(matrix[row_index*col+k],a,module);		
+				matrix[row_index*col+k] = sub_mod_GPU(matrix[row_index*col+k],a,module);
 			}
-
 		}
 	}
-
-/*
-	long long a = 0, s = 0;
-	int aa = 0;
-	int last_row = row - 1;
-	//int row_index =  last_row - (blockDim.x * blockIdx.x + threadIdx.x); 
-	int row_index = (pivot_riga + 1) + (blockDim.x * blockIdx.x + threadIdx.x);
-	if(row_index >= start && row_index < row){
-		
-		int row_linear_index = row_index * col + pivot_colonna;
-		if( matrix[row_linear_index] != 0 ){					
-			s = (long long) inv*matrix[row_linear_index];						
-			for(int k = 0; k < pivot_colonna+1; k++ ){
-				//a = mul_mod_GPU(s,matrix[pivot_riga*col+k],module);
-				a = s*( (long long) smem[k]);
-				aa = mod_long_GPU(a, (long long) module);
-				matrix[row_index*col+k] = sub_mod_GPU(matrix[row_index*col+k],aa,module);		
-			}
-
-		}
-	}
-*/
-
 }
 
 
@@ -1196,12 +1157,10 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, i
 				}
 			}
 
-			//printf("Elemento di pivot m[%d][%d]= %d\n", pivot_riga, pivot_colonna, matrix[pivot_riga*col+pivot_colonna]);
-
 			inv = invers_GPU(matrix[pivot_riga*col+pivot_colonna],module);		//inverso dell´ elemento in m[r][pivot_colonna]	
 
-			int block_dim = 1024;
-			int col_to_reduce = pivot_colonna-1;
+			int block_dim = 128;
+			int col_to_reduce = pivot_colonna;
 			int threads_per_block = ( col_to_reduce < block_dim ? col_to_reduce : block_dim);
 			dim3 threads(threads_per_block);
 
@@ -1224,19 +1183,15 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, i
 			int shared_mem = pivot_length * sizeof(int);
 			*/
 
-			printf("threads = %d, blocco_x = %d, blocco_y = %d, pivot_colonna = %d, righe_rimaste = %d\n", threads_per_block, block_x_axis, block_y_axis, pivot_colonna, row_to_reduce);
-
 			kernel_riduzione_blocco<<<blocks, threads, 0>>>(matrix, row, col, dim, module, righe_trovate, pivot_colonna, inv, pivot_riga, thread_height);
 			cudaDeviceSynchronize();
 
 			//necessario azzerare tutta la colonna (pivot_colonna)
 			for(int x = pivot_riga + 1; x < row; x++){
 				matrix[x*col+pivot_colonna] = 0;
-			}
-
+			}			
 		}
 	}
-
 }
 
 __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, int start, int*v, int dim){
@@ -1309,6 +1264,14 @@ __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, in
 			//printf("pivot_length = %d, t = %d ,cell_per_thread = %d, b = %d\n",pivot_length, t, cell_per_thread, b);
 			kernel_riduzione_riga<<<blocks, threads, shared_mem>>>(matrix, row, col, dim, module, righe_trovate, pivot_colonna, inv, pivot_riga, cell_per_thread);
 			cudaDeviceSynchronize();
+
+			
+			printf("\nCOLONNA %d\n", pivot_colonna);
+			/*
+			if(pivot_colonna < 1600 ){
+				pivot_colonna = -1;
+			}
+			*/
 
 		}
 	}
