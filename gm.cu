@@ -980,33 +980,38 @@ __global__ void kernel_riduzione_blocco(int *matrix,
 	smem_riga_pivot[threadIdx.x] = matrix[pivot_riga * col + col_index];	//ogni thread copia un solo elemento nella riga in shared, un thread per cella di riga
 //------------
 	//inizializzazione smem per pivot colonna
+
+	//calcolo del numero di celle (colonna_pivot) che ogni thred deve copiare
 	int cell_to_copy = 1;
-	if(thread_height > block_dim){
-		cell_to_copy = thread_height / block_dim;	//funziona se thread_height è multiplo di block_dim
+	if(thread_height > blockDim.x){
+		cell_to_copy = thread_height / blockDim.x + 1;	
 	}
+
 	int base_row = (pivot_riga + 1) + blockIdx.y * thread_height;
 	int index = 0;
+	//copia della porzione di colonna in smem
 	for(int i=0; i<cell_to_copy; i++){
-		index = threadIdx.x * cell_per_thread + i;
-		smem_col_pivot[index] = matrix[(base_row + index) * col + pivot_colonna];
-	}
-
-
+		index = (threadIdx.x * cell_to_copy) + i;
+		if(base_row + index < row && index < thread_height){
+			smem_col_pivot[index] = matrix[(base_row + index) * col + pivot_colonna];
+		}		
+	}	
+	//sincronizza tutti i thread del blocco in modo tale che la smem sia consistente
 	__syncthreads();
 
 	if(col_index < pivot_colonna){
-
+		//calcolo del numero di righe sulle quali deve iterare il thread, caso in cui la dimensione della matrice non collima con thread_height
 		int reached_row = ( pivot_riga + 1) + ((blockIdx.y + 1) * thread_height); //riga raggiunta dal thread corrente
 		if(reached_row > row){
-			interation = thread_height - (reached_row - row);	//numero di iterazioni nel caso in cui la matrice non collima con la dimensione della grid
+			interation = thread_height - (reached_row - row);	//dimensione non collima
 		}else{
-			interation = thread_height;
+			interation = thread_height;	//caso normale
 		}		
 
 		int row_offset = (pivot_riga + 1) + (blockIdx.y * thread_height);
 			
 		for(int i=0; i<interation; i++){
-			int pivot_element = matrix[row_offset * col + pivot_colonna];
+			int pivot_element = smem_col_pivot[i];
 			if( pivot_element != 0 ){
 				s = mul_mod_GPU(inv, pivot_element, module);		//tutti i thread sulla stessa riga calcolano lo stesso risultato
 				a = mul_mod_GPU(s, smem_riga_pivot[threadIdx.x], module);
@@ -1293,14 +1298,6 @@ __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, in
 			//printf("pivot_length = %d, t = %d ,cell_per_thread = %d, b = %d\n",pivot_length, t, cell_per_thread, b);
 			kernel_riduzione_riga<<<blocks, threads, shared_mem>>>(matrix, row, col, dim, module, righe_trovate, pivot_colonna, inv, pivot_riga, cell_per_thread);
 			cudaDeviceSynchronize();
-
-			
-			printf("\nCOLONNA %d\n", pivot_colonna);
-			/*
-			if(pivot_colonna < 1600 ){
-				pivot_colonna = -1;
-			}
-			*/
 
 		}
 	}
