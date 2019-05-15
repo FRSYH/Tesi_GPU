@@ -1148,7 +1148,8 @@ __global__ void gauss_kernel_celle(int *matrix, int row, int col, int module, in
 
 
 __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, int start, int*v, int dim){
-		int pivot_riga = 0,r = 0,righe_trovate = 0,i,k;
+	
+	int pivot_riga = 0,r = 0,righe_trovate = 0,i,k;
 	int s,inv,a;
 	int st,flag=0,invarianti=0,flag2=0,tmp;
 
@@ -1210,11 +1211,6 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, i
 
 			dim3 blocks(block_x_axis, block_y_axis);
 
-			/*
-			int pivot_length = pivot_colonna + 1;
-			int cell_per_thread = ( t >= pivot_length ) ? 1 : ( pivot_length / t) + 1; 
-			int shared_mem = pivot_length * sizeof(int);
-			*/
 			int shared = (block_dim * sizeof(int)) + (thread_height * sizeof(int));	
 
 			kernel_riduzione_blocco<<<blocks, threads, shared>>>(matrix, row, col, dim, module, righe_trovate, pivot_colonna, inv, pivot_riga, thread_height, block_dim);
@@ -1272,21 +1268,16 @@ __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, in
 				}
 			}
 
-			//printf("Elemento di pivot m[%d][%d]= %d\n", pivot_riga, pivot_colonna, matrix[pivot_riga*col+pivot_colonna]);
-
 			inv = invers_GPU(matrix[pivot_riga*col+pivot_colonna],module);		//inverso dell´ elemento in m[r][pivot_colonna]	
 
 			int block_dim = 1024;
 			//kernel per riduzione righe	
 			int numero_righe = row - righe_trovate;
 			int t = (numero_righe < block_dim ? numero_righe : block_dim);
-			//int b = (t < 512 ? 1 : (numero_righe/512) ); 
 			int b = 1;			
 			if( t == block_dim && numero_righe != block_dim ){
 				b = numero_righe / block_dim + 1;
 			}
-
-			//printf("Numero di thread lanciati: %d\n", b*t);
 
 			dim3 threads(t);
 			dim3 blocks(b);
@@ -1295,7 +1286,6 @@ __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, in
 			int cell_per_thread = ( t >= pivot_length ) ? 1 : ( pivot_length / t) + 1; 
 			int shared_mem = pivot_length * sizeof(int);
 
-			//printf("pivot_length = %d, t = %d ,cell_per_thread = %d, b = %d\n",pivot_length, t, cell_per_thread, b);
 			kernel_riduzione_riga<<<blocks, threads, shared_mem>>>(matrix, row, col, dim, module, righe_trovate, pivot_colonna, inv, pivot_riga, cell_per_thread);
 			cudaDeviceSynchronize();
 
@@ -1315,10 +1305,7 @@ void gauss_GPU(int *m, int row, int col, int module, int start, int *v){
 	gpuErrchk(cudaMalloc( (void **) &m_d, matrix_length_bytes));
 	gpuErrchk(cudaMemcpy(m_d, m, matrix_length_bytes, cudaMemcpyHostToDevice));
 
-	cudaStream_t s;
-	cudaStreamCreateWithFlags(&s, cudaStreamNonBlocking);
-	cudaDeviceSetLimit(cudaLimitDevRuntimePendingLaunchCount, 30000);
-	gauss_kernel_blocco<<<1,1,0,s>>>(m_d, row, col, module, start, v, row*col);
+	gauss_kernel_blocco<<<1,1>>>(m_d, row, col, module, start, v, row*col);
 	gpuErrchk(cudaDeviceSynchronize());
 	gpuErrchk(cudaMemcpy(m, m_d, matrix_length_bytes, cudaMemcpyDeviceToHost));
 
