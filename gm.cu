@@ -960,17 +960,12 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 */
 
 
-__global__ void kernel_riduzione_blocco(int *matrix, 
-		int row, int col, int dim, int module, int start,
-		int pivot_colonna, int inv, int pivot_riga, int thread_height, int block_dim){
+__global__ void kernel_riduzione_blocco(int *matrix, int row, int col, int module, int pivot_colonna, int inv, int pivot_riga, int thread_height, int block_dim){
 
-	// aggiungere smem per riga pivot e per colonna pivot
-	//extern __shared__ int smem_riga_pivot [];
 	extern __shared__ int smem [];
 
 	int *smem_riga_pivot = (int*)smem; 
 	int *smem_col_pivot  = (int*)&smem_riga_pivot[block_dim];
-
 
 	int a = 0, s = 0, interation = 0;
 	int col_index = blockIdx.x * blockDim.x + threadIdx.x;	//indice della colonna della matrice originale per il thread corrente
@@ -1024,7 +1019,7 @@ __global__ void kernel_riduzione_blocco(int *matrix,
 
 
 
-__global__ void kernel_riduzione_riga(int *matrix, int row, int col, int dim, int module, int start, int pivot_colonna, int inv, int pivot_riga, int cell_per_thread){
+__global__ void kernel_riduzione_riga(int *matrix, int row, int col, int module, int start, int pivot_colonna, int inv, int pivot_riga, int cell_per_thread){
 
 
 	extern __shared__ int smem[];
@@ -1059,7 +1054,7 @@ __global__ void kernel_riduzione_riga(int *matrix, int row, int col, int dim, in
 }
 
 
-__global__ void kernel_riduzione_cella(int *matrix, int row, int col, int dim, int module, int inv, int pivot_colonna, int pivot_riga, int start){
+__global__ void kernel_riduzione_cella(int *matrix, int row, int col, int module, int inv, int pivot_colonna, int pivot_riga){
 
 	int last_row = row - 1;
 	int starting_row = pivot_riga + 1;
@@ -1077,17 +1072,11 @@ __global__ void kernel_riduzione_cella(int *matrix, int row, int col, int dim, i
 }
 
 
-__global__ void gauss_kernel_celle(int *matrix, int row, int col, int module, int start, int*v, int dim){
+__global__ void gauss_kernel_celle(int *matrix, int row, int col, int module){
 		
 	int pivot_riga = 0,r = 0,righe_trovate = 0,i,k;
 	int s,inv,a;
-	int st,flag=0,invarianti=0,flag2=0,tmp;
-
-	if( start == 0 ){
-		flag = 1;
-	}else{
-		st = start;
-	}
+	int flag=0,invarianti=0,flag2=0,tmp;
 
 	for(int pivot_colonna = col-1; pivot_colonna >= 0; pivot_colonna-- ){
 		r = righe_trovate;
@@ -1101,24 +1090,9 @@ __global__ void gauss_kernel_celle(int *matrix, int row, int col, int module, in
 			if( r != righe_trovate ){
 				swap_rows_GPU(matrix,row,col,righe_trovate,r); //sposto la riga appena trovata nella posizone corretta
 				flag = 1;
-				if( v != NULL ){
-					tmp = v[righe_trovate];
-					v[righe_trovate] = v[r];
-					v[r] = tmp;
-				}				
 			}			
 			pivot_riga = righe_trovate;
 			righe_trovate++;
-
-			if( flag == 1 ){  			//riprendo la normale riduzione di gauss
-				st = righe_trovate;
-			}else{
-
-				if( st < righe_trovate ){  //se sono nella modalitá ottimizzazione e supero le prime n righe allora ritorno alla normale riduzione
-					flag = 1;
-					st = righe_trovate;
-				}
-			}
 
 			inv = invers_GPU(matrix[pivot_riga*col+pivot_colonna],module);		//inverso dell´ elemento in m[r][pivot_colonna]	
 
@@ -1131,9 +1105,7 @@ __global__ void gauss_kernel_celle(int *matrix, int row, int col, int module, in
 			int grid_x = col/block_dim + 1;
 			dim3 blocks(grid_x, grid_y,1);
 
-			//printf("Tot celle:%d, Tot thread:%d\n",numero_righe*col,  grid_y*grid_x*block_size);
-			
-			kernel_riduzione_cella<<<blocks, threads>>>(matrix, row, col, dim, module, inv, pivot_colonna, pivot_riga, righe_trovate);
+			kernel_riduzione_cella<<<blocks, threads>>>(matrix, row, col, module, inv, pivot_colonna, pivot_riga);
 			cudaDeviceSynchronize();
 
 			//necessario azzerare tutta la colonna (pivot_colonna)
@@ -1147,18 +1119,11 @@ __global__ void gauss_kernel_celle(int *matrix, int row, int col, int module, in
 
 
 
-__global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, int start, int*v, int dim){
+__global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, int dim){
 	
 	int pivot_riga = 0,r = 0,righe_trovate = 0,i,k;
 	int s,inv,a;
-	int st,flag=0,invarianti=0,flag2=0,tmp;
-
-
-	if( start == 0 ){
-		flag = 1;
-	}else{
-		st = start;
-	}
+	int flag=0,invarianti=0,flag2=0,tmp;
 
 	for(int pivot_colonna = col-1; pivot_colonna >= 0; pivot_colonna-- ){
 		r = righe_trovate;
@@ -1171,25 +1136,11 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, i
 		if( r < row ){ //significa che ho trovato un valore non nullo
 			if( r != righe_trovate ){
 				swap_rows_GPU(matrix,row,col,righe_trovate,r); //sposto la riga appena trovata nella posizone corretta
-				flag = 1;
-				if( v != NULL ){
-					tmp = v[righe_trovate];
-					v[righe_trovate] = v[r];
-					v[r] = tmp;
-				}				
+				flag = 1;		
 			}			
+
 			pivot_riga = righe_trovate;
 			righe_trovate++;
-
-			if( flag == 1 ){  			//riprendo la normale riduzione di gauss
-				st = righe_trovate;
-			}else{
-
-				if( st < righe_trovate ){  //se sono nella modalitá ottimizzazione e supero le prime n righe allora ritorno alla normale riduzione
-					flag = 1;
-					st = righe_trovate;
-				}
-			}
 
 			inv = invers_GPU(matrix[pivot_riga*col+pivot_colonna],module);		//inverso dell´ elemento in m[r][pivot_colonna]	
 
@@ -1213,7 +1164,7 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, i
 
 			int shared = (block_dim * sizeof(int)) + (thread_height * sizeof(int));	
 
-			kernel_riduzione_blocco<<<blocks, threads, shared>>>(matrix, row, col, dim, module, righe_trovate, pivot_colonna, inv, pivot_riga, thread_height, block_dim);
+			kernel_riduzione_blocco<<<blocks, threads, shared>>>(matrix, row, col, module, pivot_colonna, inv, pivot_riga, thread_height, block_dim);
 			cudaDeviceSynchronize();
 
 			//necessario azzerare tutta la colonna (pivot_colonna)
@@ -1224,18 +1175,11 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, i
 	}
 }
 
-__global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, int start, int*v, int dim){
+__global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, int dim){
 		
 	int pivot_riga = 0,r = 0,righe_trovate = 0,i,k;
 	int s,inv,a;
-	int st,flag=0,invarianti=0,flag2=0,tmp;
-
-
-	if( start == 0 ){
-		flag = 1;
-	}else{
-		st = start;
-	}
+	int flag=0,invarianti=0,flag2=0,tmp;
 
 	for(int pivot_colonna = col-1; pivot_colonna >= 0; pivot_colonna-- ){
 		r = righe_trovate;
@@ -1249,24 +1193,10 @@ __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, in
 			if( r != righe_trovate ){
 				swap_rows_GPU(matrix,row,col,righe_trovate,r); //sposto la riga appena trovata nella posizone corretta
 				flag = 1;
-				if( v != NULL ){
-					tmp = v[righe_trovate];
-					v[righe_trovate] = v[r];
-					v[r] = tmp;
-				}				
+				
 			}			
 			pivot_riga = righe_trovate;
 			righe_trovate++;
-
-			if( flag == 1 ){  			//riprendo la normale riduzione di gauss
-				st = righe_trovate;
-			}else{
-
-				if( st < righe_trovate ){  //se sono nella modalitá ottimizzazione e supero le prime n righe allora ritorno alla normale riduzione
-					flag = 1;
-					st = righe_trovate;
-				}
-			}
 
 			inv = invers_GPU(matrix[pivot_riga*col+pivot_colonna],module);		//inverso dell´ elemento in m[r][pivot_colonna]	
 
@@ -1286,7 +1216,7 @@ __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, in
 			int cell_per_thread = ( t >= pivot_length ) ? 1 : ( pivot_length / t) + 1; 
 			int shared_mem = pivot_length * sizeof(int);
 
-			kernel_riduzione_riga<<<blocks, threads, shared_mem>>>(matrix, row, col, dim, module, righe_trovate, pivot_colonna, inv, pivot_riga, cell_per_thread);
+			kernel_riduzione_riga<<<blocks, threads, shared_mem>>>(matrix, row, col, module, righe_trovate, pivot_colonna, inv, pivot_riga, cell_per_thread);
 			cudaDeviceSynchronize();
 
 		}
@@ -1295,7 +1225,7 @@ __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, in
 
 
 
-void gauss_GPU(int *m, int row, int col, int module, int start, int *v){
+void gauss_GPU(int *m, int row, int col, int module){
 
 	int matrix_length = row * col;
 	int matrix_length_bytes = matrix_length * sizeof(int);
@@ -1305,7 +1235,7 @@ void gauss_GPU(int *m, int row, int col, int module, int start, int *v){
 	gpuErrchk(cudaMalloc( (void **) &m_d, matrix_length_bytes));
 	gpuErrchk(cudaMemcpy(m_d, m, matrix_length_bytes, cudaMemcpyHostToDevice));
 
-	gauss_kernel_blocco<<<1,1>>>(m_d, row, col, module, start, v, row*col);
+	gauss_kernel_blocco<<<1,1>>>(m_d, row, col, module, row*col);
 	gpuErrchk(cudaDeviceSynchronize());
 	gpuErrchk(cudaMemcpy(m, m_d, matrix_length_bytes, cudaMemcpyDeviceToHost));
 
@@ -1313,76 +1243,6 @@ void gauss_GPU(int *m, int row, int col, int module, int start, int *v){
 
 }
 
-/*  effettua la riduzione di gauss della matrice m in place
-    parametro start viene utilizzato per ottimizzare l'agloritmo:
-	- 0 effettua la normale riduzione di gauss
-	- n (con n > 0) effettua una riduzione ottimizzata saltando le prime n righe nella fase di riduzione delle righe sottostanti.
-
-	Questa ottimizzazione è possibile solo se le prime n righe sono risultato di una riduzione di gauss precedente, quindi risulta inutile ripetere l'operazione di riduzione su queste righe.
-	Il salto delle prime n righe avviene solo se nella corrente riduzione non si è effettuato swap di righe. Quando le righe trovate superano start si ritorna alla normale riduzione.
-	
-
-*/
-void gauss(int *m, int row, int col, int module, int start, int *v){
-	
-	int pivot_riga = 0,r = 0,righe_trovate = 0,i,k;
-	int s,inv,a;
-	int st,flag=0,invarianti=0,flag2=0,tmp;
-
-	if( start == 0 ){
-		flag = 1;
-	}else{
-		st = start;
-	}
-
-	for(int pivot_colonna = col-1; pivot_colonna >= 0; pivot_colonna-- ){
-		r = righe_trovate;
-		while( r < row && m[r*col+pivot_colonna] == 0 ){   //m[r][pivot_colonna]
-			r++;
-			
-		}
-		// ho trovato la prima riga con elemento non nullo in posizione r e pivot_colonna oppure non esiste nessuna riga con elemento non nullo in posizione pivot_colonna
-		
-		if( r < row ){ //significa che ho trovato un valore non nullo
-			if( r != righe_trovate ){
-				swap_rows(m,row,col,righe_trovate,r); //sposto la riga appena trovata nella posizone corretta
-				flag = 1;
-				if( v != NULL ){
-					tmp = v[righe_trovate];
-					v[righe_trovate] = v[r];
-					v[r] = tmp;
-				}				
-			}			
-			pivot_riga = righe_trovate;
-			righe_trovate++;
-
-			if( flag == 1 ){  			//riprendo la normale riduzione di gauss
-				st = righe_trovate;
-			}else{
-
-				if( st < righe_trovate ){  //se sono nella modalitá ottimizzazione e supero le prime n righe allora ritorno alla normale riduzione
-					flag = 1;
-					st = righe_trovate;
-				}
-			}
-
-			inv = invers(m[pivot_riga*col+pivot_colonna],module);		//inverso dell´ elemento in m[r][pivot_colonna]	
-
-			#pragma omp parallel for private(i,s,k,a)
-			for( i = st; i < row; i++ ){
-				if( m[i*col+pivot_colonna] != 0 ){		//m[i][pivot_colonna]
-					
-					s = mul_mod(inv,m[i*col+pivot_colonna],module);						
-					for( k = 0; k < pivot_colonna+1; k++ ){
-						a = mul_mod(s,m[pivot_riga*col+k],module);
-						m[i*col+k] = sub_mod(m[i*col+k],a,module);
-
-					}
-				}
-			}
-		}
-	}
-}
 
 int null_rows(int *m, int row, int col){
 //calcola il numero di righe nulle presenti nella matrice m.
@@ -1490,8 +1350,7 @@ void execute_standard(int **matrix, int * row, int col, struct map map, int *deg
 		start = clock();
 
 		//applico la riduzione di Gauss
-		//gauss(*matrix, *row, col, module, st, NULL);
-		gauss_GPU(*matrix, *row, col, module, st, NULL);
+		gauss_GPU(*matrix, *row, col, module);
 		//elimino le righe nulle della matrice
 		eliminate_null_rows(matrix, row, col);
 		
