@@ -767,20 +767,6 @@ void moltiplica_riga_forn(int **m, int *row, int col, int riga, struct map map, 
 
 }
 
-//Scambio di due righe della matrice m.
-void swap_rows(int *m, int row, int col, int j, int i){
-	
-	int k;
-	long long tmp;
-	if( j!=i ){
-		for(k=0;k<col;k++){
-			tmp = m[i*col+k];			//m[i][k];
-			m[i*col+k] = m[j*col+k];	//m[i][k] = m[j][k];
-			m[j*col+k] = tmp;			//m[j][k] = tmp;
-		}
-	}
-}
-
 
 //Scambio di due righe della matrice m.
 __device__ void swap_rows_GPU(int *m, int row, int col, int j, int i){
@@ -794,23 +780,6 @@ __device__ void swap_rows_GPU(int *m, int row, int col, int j, int i){
 			m[j*col+k] = tmp;			//m[j][k] = tmp;
 		}
 	}
-}
-
-int mod_long(long long n, int p) {
-	long long v = n, x = 0;
-
-	if (v >= p) {
-		v = n % p;
-	}
-	else {
-		if (v < 0) {
-			x = n / p;
-			v = n - (x*p);
-			v += p;
-		}
-	}
-	int r = v;
-	return r;
 }
 
 
@@ -850,45 +819,6 @@ __device__ int mod_GPU(int n, int p) {
 		}
 	}
 	return v;
-}
-
-//inverso moltiplicativo di n in modulo p (con p primo).
-int invers(int n, int p){
-	int b0 = p, t, q;
-	int x0 = 0, x1 = 1;
-	if (p == 1) return 1;
-	while (n > 1) {
-		q = n / p;
-		t = p, p = (n % p), n = t;
-		t = x0, x0 = x1 - q * x0, x1 = t;
-	}
-	if (x1 < 0) x1 += b0;
-	return x1;	
-}
-
-
-// a + b mod p
-//sommatoria di a e b in modulo p
-int add_mod(int a, int b, int p){
-	return mod((a+b),p);
-}
-
-// a - b mod p
-//sottrazione di a e b in modulo p
-int sub_mod(int a, int b, int p){
-	long long aa,bb;
-	aa = a;
-	bb = b;
-	return mod_long((aa-bb),p);
-}
-
-// a * b mod p
-//prodotto di a e b in modulo p
-int mul_mod(int a, int b, int p){
-	long long aa,bb;
-	aa = a;
-	bb = b;
-	return mod_long((aa*bb),p);
 }
 
 
@@ -1117,26 +1047,62 @@ __global__ void gauss_kernel_celle(int *matrix, int row, int col, int module){
 	}
 }
 
+__global__ void reset_pivot_col(int *matrix, int row, int col, int pivot_riga, int pivot_colonna, int thread_height, int block_dim){
 
+	int start_row = (pivot_riga + 1) + ( (blockIdx.x * (thread_height*block_dim)) + (threadIdx.x * thread_height));
+	int reached_row = (pivot_riga + 1) + ( (blockIdx.x * (thread_height*block_dim)) + ( (threadIdx.x + 1) * thread_height));
+	int iteration = thread_height;
+	if(reached_row > row){
+		iteration = thread_height - (reached_row - row);
+		if(iteration > thread_height){
+			iteration = 0;
+		}
+	}
+
+	for(int i=0; i<iteration; i++){
+		matrix[(start_row + i)*col+pivot_colonna] = 0;
+	}
+}
+
+__global__ void kernel_swap_rows(int *m, int row, int col, int j, int i){
+	int k;
+	long long tmp;
+	if( j!=i ){
+		for(k=0;k<col;k++){
+			tmp = m[i*col+k];			//m[i][k];
+			m[i*col+k] = m[j*col+k];	//m[i][k] = m[j][k];
+			m[j*col+k] = tmp;			//m[j][k] = tmp;
+		}
+	}
+}
 
 __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, int dim){
 	
 	int pivot_riga = 0,r = 0,righe_trovate = 0,i,k;
 	int s,inv,a;
-	int flag=0,invarianti=0,flag2=0,tmp;
+	float total_time_for_reduction = 0, total_time_for_reset = 0.0;
+	double elapsed = 0.0;
+	clock_t start, stop;
+	int tick = 0;
 
 	for(int pivot_colonna = col-1; pivot_colonna >= 0; pivot_colonna-- ){
 		r = righe_trovate;
+		start = clock64();
 		while( r < row && matrix[r*col+pivot_colonna] == 0 ){   //m[r][pivot_colonna]
 			r++;
-			
+			tick++;			
 		}
+		stop = clock64();
+		elapsed = (((double)stop-start)/1493000000.0)*1000.0;
+		total_time_for_reset += elapsed;
 		// ho trovato la prima riga con elemento non nullo in posizione r e pivot_colonna oppure non esiste nessuna riga con elemento non nullo in posizione pivot_colonna
 		
 		if( r < row ){ //significa che ho trovato un valore non nullo
 			if( r != righe_trovate ){
-				swap_rows_GPU(matrix,row,col,righe_trovate,r); //sposto la riga appena trovata nella posizone corretta
-				flag = 1;		
+
+				//swap_rows_GPU(matrix,row,col,righe_trovate,r); //sposto la riga appena trovata nella posizone corretta
+				kernel_swap_rows<<<(1,1,1),(1,1,1)>>>(matrix,row,col,righe_trovate,r);
+				cudaDeviceSynchronize();
 			}			
 
 			pivot_riga = righe_trovate;
@@ -1163,16 +1129,25 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, i
 			dim3 blocks(block_x_axis, block_y_axis);
 
 			int shared = (block_dim * sizeof(int)) + (thread_height * sizeof(int));	
-
 			kernel_riduzione_blocco<<<blocks, threads, shared>>>(matrix, row, col, module, pivot_colonna, inv, pivot_riga, thread_height, block_dim);
 			cudaDeviceSynchronize();
 
+
 			//necessario azzerare tutta la colonna (pivot_colonna)
-			for(int x = pivot_riga + 1; x < row; x++){
-				matrix[x*col+pivot_colonna] = 0;
-			}			
+			thread_height = 100;
+			block_dim = 32;
+			row_to_reduce = row-pivot_riga;
+			threads_per_block = (row_to_reduce < thread_height ? 1 : block_dim);
+			block_x_axis = (threads_per_block == block_dim && row_to_reduce != block_dim) ? (row_to_reduce/(thread_height*block_dim)+1) : 1;
+			dim3 t(threads_per_block);
+			dim3 b(block_x_axis);
+
+			start = clock64();
+			reset_pivot_col<<<b, t>>>(matrix, row, col, pivot_riga, pivot_colonna, thread_height, block_dim);
+			cudaDeviceSynchronize();
 		}
 	}
+	printf("tick %d, time for rows %f\n", tick, total_time_for_reset/1000.0);
 }
 
 __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, int dim){
@@ -1225,22 +1200,28 @@ __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, in
 
 
 
-void gauss_GPU(int *m, int row, int col, int module){
+double gauss_GPU(int *m, int row, int col, int module){
 
 	int matrix_length = row * col;
 	int matrix_length_bytes = matrix_length * sizeof(int);
-	
+	clock_t start, end;
+	double elapsed = 0.0;	
 	int *m_d;
 
 	gpuErrchk(cudaMalloc( (void **) &m_d, matrix_length_bytes));
 	gpuErrchk(cudaMemcpy(m_d, m, matrix_length_bytes, cudaMemcpyHostToDevice));
 
+	start = clock();
+
 	gauss_kernel_blocco<<<1,1>>>(m_d, row, col, module, row*col);
 	gpuErrchk(cudaDeviceSynchronize());
 	gpuErrchk(cudaMemcpy(m, m_d, matrix_length_bytes, cudaMemcpyDeviceToHost));
 
+	end = clock();
+	elapsed =  ((double)(end - start)) / CLOCKS_PER_SEC;
 	gpuErrchk(cudaFree(m_d));
 
+	return elapsed;
 }
 
 
@@ -1347,10 +1328,10 @@ void execute_standard(int **matrix, int * row, int col, struct map map, int *deg
 
 		fprintf(output_file, "\n -Eseguo Gauss, ");
 		fflush(stdout);
-		start = clock();
+		//start = clock();
 
 		//applico la riduzione di Gauss
-		gauss_GPU(*matrix, *row, col, module);
+		elapsed = gauss_GPU(*matrix, *row, col, module);
 		//elimino le righe nulle della matrice
 		eliminate_null_rows(matrix, row, col);
 		
@@ -1360,8 +1341,8 @@ void execute_standard(int **matrix, int * row, int col, struct map map, int *deg
 		m_deg_array[n_round] = (int *)calloc(max_degree+1, sizeof(int));
 		m_deg = m_deg_array[n_round];
 		
-		end = clock();
-		elapsed =  ((double)(end - start)) / CLOCKS_PER_SEC;
+		//end = clock();
+		//elapsed =  ((double)(end - start)) / CLOCKS_PER_SEC;
 		fprintf(output_file, "numero righe: %d               (%f sec)\n", *row, elapsed);
 
   		matrix_degree(*matrix,*row, col, m_deg, monomi, numero_variabili);
@@ -1378,12 +1359,7 @@ void execute_standard(int **matrix, int * row, int col, struct map map, int *deg
 			}
 
 		//flag = 1;
-	/*	
-		if(n_round == 2){
-			flag=1;
-			//print_matrix(*matrix, *row, col, output_file);
-		}
-	*/	
+	
 		for(int i=max_degree; i>0; i--){
 			if( m_deg[i] == 0 ){
 				expansion_degree = i;
@@ -1455,6 +1431,12 @@ int main (int argc, char *argv[]){
 	if (!output_file)
 		output_file = stdout;
 
+/*
+	int peak_clk = 1;
+	cudaError_t err = cudaDeviceGetAttribute(&peak_clk, cudaDevAttrClockRate, 0);
+  	if (err != cudaSuccess) {printf("cuda err: %d at line %d\n", (int)err, __LINE__); return 1;}
+  	printf("peak clock rate: %dkHz", peak_clk);
+*/ 
 
 	int row, col, numero_variabili, tipo_ordinamento;
 	int *matrix;
