@@ -12,7 +12,7 @@
 // compilazione nvcc gm.cu -o gm -w -Xcompiler " -openmp"
 // nvcc gm.cu -o gm -w -Xcompiler " -openmp" -gencode arch=compute_61,code=sm_61 -lcudadevrt -rdc=true
 
-
+__device__ int pointer_r = 0;
 
 //dichiarazione variabili globali
 int max_degree = 0;
@@ -1064,17 +1064,37 @@ __global__ void reset_pivot_col(int *matrix, int row, int col, int pivot_riga, i
 	}
 }
 
-__global__ void kernel_swap_rows(int *m, int row, int col, int j, int i){
-	int k;
-	long long tmp;
-	if( j!=i ){
-		for(k=0;k<col;k++){
-			tmp = m[i*col+k];			//m[i][k];
-			m[i*col+k] = m[j*col+k];	//m[i][k] = m[j][k];
-			m[j*col+k] = tmp;			//m[j][k] = tmp;
-		}
+__global__ void swap_rows(int *matrix, int row, int col, int j, int i){
+
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if(tid >= col){
+		return;
+	}	
+	int ii = i*col+tid;
+	int jj = j*col+tid;
+	int tmp = matrix[ii];
+	matrix[ii] = matrix[jj];
+	matrix[jj] = tmp;
+}
+
+__global__ void find_pivot(int *matrix, int row, int col, int r, int pivot_colonna){
+/*
+	while( r < row && matrix[r*col+pivot_colonna] == 0 ){   
+		r++;
+	}
+	pointer_r = r;
+*/
+
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
+	int thread_row = r+tid;
+	if(thread_row >= row)
+		return;
+	if(matrix[thread_row*col+pivot_colonna] != 0){
+		atomicMin(&pointer_r, thread_row);
 	}
 }
+
+
 
 __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, int dim){
 	
@@ -1084,38 +1104,77 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, i
 	double elapsed = 0.0;
 	clock_t start, stop;
 	int tick = 0;
+	int block_dim = 0;
+	int threads_per_block = 0;
+	int block_x_axis, block_y_axis = 0;
+	int *p;
 
 	for(int pivot_colonna = col-1; pivot_colonna >= 0; pivot_colonna-- ){
 		r = righe_trovate;
-		start = clock64();
+
+//		start = clock64();
+/*
 		while( r < row && matrix[r*col+pivot_colonna] == 0 ){   //m[r][pivot_colonna]
 			r++;
-			tick++;			
 		}
+		printf("%d\n", r);
+*/
+		block_dim = 256;
+		int row_to_check = row - righe_trovate;
+		threads_per_block = ( row_to_check < block_dim ? row_to_check : block_dim);
+		dim3 t_find(threads_per_block);
+
+		if( threads_per_block == block_dim && row_to_check != block_dim){
+			block_x_axis = (row_to_check / block_dim) + 1;
+		}else{
+			block_x_axis = 1;
+		}				
+		dim3 b_find(block_x_axis);	
+		pointer_r = row;	
+		find_pivot<<<b_find, t_find>>>(matrix, row, col, r, pivot_colonna);
+		cudaDeviceSynchronize();
+		r = pointer_r;
+
+
+/*
 		stop = clock64();
 		elapsed = (((double)stop-start)/1493000000.0)*1000.0;
 		total_time_for_reset += elapsed;
+*/		
 		// ho trovato la prima riga con elemento non nullo in posizione r e pivot_colonna oppure non esiste nessuna riga con elemento non nullo in posizione pivot_colonna
 		
 		if( r < row ){ //significa che ho trovato un valore non nullo
 			if( r != righe_trovate ){
 
-				//swap_rows_GPU(matrix,row,col,righe_trovate,r); //sposto la riga appena trovata nella posizone corretta
-				kernel_swap_rows<<<(1,1,1),(1,1,1)>>>(matrix,row,col,righe_trovate,r);
+ 				////////////////////////SWAP ROWS////////////////////////////////////////////////////////
+				block_dim = 256;
+				threads_per_block = ( col < block_dim ? col : block_dim);
+				dim3 t_swap(threads_per_block);
+
+				if( threads_per_block == block_dim && col != block_dim){
+					block_x_axis = (col / block_dim) + 1;
+				}else{
+					block_x_axis = 1;
+				}				
+				dim3 b_swap(block_x_axis);
+				//sposto la riga appena trovata nella posizone corretta
+				swap_rows<<<b_swap, t_swap>>>(matrix, row, col, righe_trovate, r);
 				cudaDeviceSynchronize();
+			
+				////////////////////////////////////////////////////////////////////////////////////////
 			}			
 
 			pivot_riga = righe_trovate;
 			righe_trovate++;
 
-			inv = invers_GPU(matrix[pivot_riga*col+pivot_colonna],module);		//inverso dell´ elemento in m[r][pivot_colonna]	
+			inv = invers_GPU(matrix[pivot_riga*col+pivot_colonna], module);		//inverso dell´ elemento in m[r][pivot_colonna]	
 
-			int block_dim = 128;
+			////////////////////////////////////////REDUCTION BY BLOCK////////////////////////////////////
+			block_dim = 128;
 			int col_to_reduce = pivot_colonna;
-			int threads_per_block = ( col_to_reduce < block_dim ? col_to_reduce : block_dim);
+			threads_per_block = ( col_to_reduce < block_dim ? col_to_reduce : block_dim);
 			dim3 threads(threads_per_block);
 
-			int block_x_axis, block_y_axis = 0;
 			if( threads_per_block == block_dim && col_to_reduce != block_dim){
 				block_x_axis = (col_to_reduce / block_dim) + 1;
 			}else{
@@ -1131,9 +1190,9 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, i
 			int shared = (block_dim * sizeof(int)) + (thread_height * sizeof(int));	
 			kernel_riduzione_blocco<<<blocks, threads, shared>>>(matrix, row, col, module, pivot_colonna, inv, pivot_riga, thread_height, block_dim);
 			cudaDeviceSynchronize();
+			//////////////////////////////////////////////////////////////////////////////////////////
 
-
-			//necessario azzerare tutta la colonna (pivot_colonna)
+			///////////////////////////////RESET PIVOT COL////////////////////////////////////////
 			thread_height = 100;
 			block_dim = 32;
 			row_to_reduce = row-pivot_riga;
@@ -1142,12 +1201,13 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, i
 			dim3 t(threads_per_block);
 			dim3 b(block_x_axis);
 
-			start = clock64();
 			reset_pivot_col<<<b, t>>>(matrix, row, col, pivot_riga, pivot_colonna, thread_height, block_dim);
 			cudaDeviceSynchronize();
+			//////////////////////////////////////////////////////////////////////////////////////
+
 		}
 	}
-	printf("tick %d, time for rows %f\n", tick, total_time_for_reset/1000.0);
+	//printf("tick %d, time for rows %f\n", tick, total_time_for_reset/1000.0);
 }
 
 __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, int dim){
@@ -1358,8 +1418,7 @@ void execute_standard(int **matrix, int * row, int col, struct map map, int *deg
 			old_v = new_v;
 			}
 
-		//flag = 1;
-	
+
 		for(int i=max_degree; i>0; i--){
 			if( m_deg[i] == 0 ){
 				expansion_degree = i;
