@@ -1111,14 +1111,7 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, i
 
 	for(int pivot_colonna = col-1; pivot_colonna >= 0; pivot_colonna-- ){
 		r = righe_trovate;
-
-//		start = clock64();
-/*
-		while( r < row && matrix[r*col+pivot_colonna] == 0 ){   //m[r][pivot_colonna]
-			r++;
-		}
-		printf("%d\n", r);
-*/
+		///////////////////////////FIND PIVOT///////////////////////////////////////////////
 		block_dim = 256;
 		int row_to_check = row - righe_trovate;
 		threads_per_block = ( row_to_check < block_dim ? row_to_check : block_dim);
@@ -1134,18 +1127,10 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, i
 		find_pivot<<<b_find, t_find>>>(matrix, row, col, r, pivot_colonna);
 		cudaDeviceSynchronize();
 		r = pointer_r;
-
-
-/*
-		stop = clock64();
-		elapsed = (((double)stop-start)/1493000000.0)*1000.0;
-		total_time_for_reset += elapsed;
-*/		
+		/////////////////////////////////////////////////////////////////////////////////
 		// ho trovato la prima riga con elemento non nullo in posizione r e pivot_colonna oppure non esiste nessuna riga con elemento non nullo in posizione pivot_colonna
-		
-		if( r < row ){ //significa che ho trovato un valore non nullo
+		if( r < row ){
 			if( r != righe_trovate ){
-
  				////////////////////////SWAP ROWS////////////////////////////////////////////////////////
 				block_dim = 256;
 				threads_per_block = ( col < block_dim ? col : block_dim);
@@ -1163,12 +1148,10 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, i
 			
 				////////////////////////////////////////////////////////////////////////////////////////
 			}			
-
 			pivot_riga = righe_trovate;
 			righe_trovate++;
 
-			inv = invers_GPU(matrix[pivot_riga*col+pivot_colonna], module);		//inverso dell´ elemento in m[r][pivot_colonna]	
-
+			inv = invers_GPU(matrix[pivot_riga*col+pivot_colonna], module);
 			////////////////////////////////////////REDUCTION BY BLOCK////////////////////////////////////
 			block_dim = 128;
 			int col_to_reduce = pivot_colonna;
@@ -1204,10 +1187,8 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, i
 			reset_pivot_col<<<b, t>>>(matrix, row, col, pivot_riga, pivot_colonna, thread_height, block_dim);
 			cudaDeviceSynchronize();
 			//////////////////////////////////////////////////////////////////////////////////////
-
 		}
 	}
-	//printf("tick %d, time for rows %f\n", tick, total_time_for_reset/1000.0);
 }
 
 __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, int dim){
