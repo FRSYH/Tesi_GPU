@@ -1,8 +1,27 @@
-﻿  Compiling CUDA source file main.cu...
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppClean.targets(76,5): warning : Il processo non può accedere al file 'c:\users\martino\onedrive\unimi\magistrale\gpu computing\tesi_gpu\tesi_gpu\x64\debug\tesi_gpu.exe' perché è in uso da un altro processo.
+  
+  C:\Users\Martino\OneDrive\Unimi\Magistrale\GPU computing\Tesi_GPU\tesi_gpu\tesi_gpu>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\bin\nvcc.exe" -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.13.26128\bin\HostX86\x64" -x cu  -I"C:\Users\Martino\OneDrive\Unimi\Magistrale\GPU computing\Tesi_GPU\tesi_gpu\tesi_gpu" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include"      -maxrregcount=0  --machine 64 --compile       -Xcompiler "/EHsc /W3 /nologo /Od  /FS /Zi /RTC1 /MDd " -o x64\Debug\main.cu.obj "C:\Users\Martino\OneDrive\Unimi\Magistrale\GPU computing\Tesi_GPU\tesi_gpu\tesi_gpu\main.cu" -clean 
+  main.cu
+  Compiling CUDA source file main.cu...
   
   C:\Users\Martino\OneDrive\Unimi\Magistrale\GPU computing\Tesi_GPU\tesi_gpu\tesi_gpu>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.13.26128\bin\HostX86\x64" -x cu -rdc=true -I"C:\Users\Martino\OneDrive\Unimi\Magistrale\GPU computing\Tesi_GPU\tesi_gpu\tesi_gpu" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include"      -maxrregcount=0  --machine 64 --compile -cudart static      -Xcompiler "/EHsc /W3 /nologo /Od /Fdx64\Debug\vc141.pdb /FS /Zi /RTC1 /MDd " -o x64\Debug\main.cu.obj "C:\Users\Martino\OneDrive\Unimi\Magistrale\GPU computing\Tesi_GPU\tesi_gpu\tesi_gpu\main.cu" 
   main.cu
+  linalg.cpp
+  matrix.cpp
+c:\users\martino\onedrive\unimi\magistrale\gpu computing\tesi_gpu\tesi_gpu\tesi_gpu\matrix.cpp(195): warning C4244: '+=': conversione da '__int64' a 'int'. Possibile perdita di dati.
+c:\users\martino\onedrive\unimi\magistrale\gpu computing\tesi_gpu\tesi_gpu\tesi_gpu\matrix.cpp(196): warning C4244: '+=': conversione da '__int64' a 'int'. Possibile perdita di dati.
+  scan.cpp
+c:\users\martino\onedrive\unimi\magistrale\gpu computing\tesi_gpu\tesi_gpu\tesi_gpu\scan.cpp(19): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.16299.0\ucrt\stdio.h(1195): note: vedere la dichiarazione di 'fscanf'
+c:\users\martino\onedrive\unimi\magistrale\gpu computing\tesi_gpu\tesi_gpu\tesi_gpu\scan.cpp(21): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.16299.0\ucrt\stdio.h(1195): note: vedere la dichiarazione di 'fscanf'
+c:\users\martino\onedrive\unimi\magistrale\gpu computing\tesi_gpu\tesi_gpu\tesi_gpu\scan.cpp(23): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.16299.0\ucrt\stdio.h(1195): note: vedere la dichiarazione di 'fscanf'
+c:\users\martino\onedrive\unimi\magistrale\gpu computing\tesi_gpu\tesi_gpu\tesi_gpu\scan.cpp(25): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.16299.0\ucrt\stdio.h(1195): note: vedere la dichiarazione di 'fscanf'
+c:\users\martino\onedrive\unimi\magistrale\gpu computing\tesi_gpu\tesi_gpu\tesi_gpu\scan.cpp(86): warning C4244: '=': conversione da '__int64' a 'int'. Possibile perdita di dati.
   utility.cpp
+  Generazione del codice in corso...
   
   C:\Users\Martino\OneDrive\Unimi\Magistrale\GPU computing\Tesi_GPU\tesi_gpu\tesi_gpu>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\bin\nvcc.exe" -dlink -o x64\Debug\tesi_gpu.device-link.obj -Xcompiler "/EHsc /W3 /nologo /Od /Zi /RTC1 /MDd " -L"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\lib\x64" -L"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\lib\x64" -L"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\lib\x64" cudart_static.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib cudadevrt.lib  -gencode=arch=compute_52,code=sm_52  --machine 64 x64\Debug\main.cu.obj 
   cudart_static.lib

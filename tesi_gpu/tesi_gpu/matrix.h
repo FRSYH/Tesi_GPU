@@ -48,4 +48,10 @@ void eliminate_equal_rows(long long ***m1, int *row1, long long **m2, int row2, 
 
 void print_matrix_degree(int *m_deg, FILE *output_file, int max_degree);
 
+void moltiplica_matrice(int **m, int *row, int col, struct map map, int * degree, int **vet, int num_var, int expansion_degree, int max_degree);
+
+void moltiplica_riga_forn(int **m, int *row, int col, int riga, struct map map, int * degree, int **vet, int num_var, int stop_degree, int max_degree);
+
+void print_incognite(int *m, int row, int col, int num_var, int **vet, FILE *output_file);
+
 #endif //MATRIX_H_

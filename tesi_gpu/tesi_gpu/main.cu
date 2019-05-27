@@ -5,8 +5,8 @@
 #include <time.h>
 #include <stdbool.h>
 #include <time.h>
-#include <cuda_runtime.h>
-#include <device_launch_parameters.h>
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
 #include "linalg.h"
 #include "matrix.h"
 #include "scan.h"
@@ -22,307 +22,6 @@ int max_degree = 0;
 int module = 0;
 
 //----------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------
-
-
-/*restituisce un array contenente tutti i len monomi con n variabili e grado <= m
-len è il numero di possibili monomi con n variabili e grado <= m
-i monomi sono array di interi di lunghezza n dove il valore di ogni posizione rappresenta
-il grado della variabile in quella posizione. Esempio: n=3, x^2*y*z = [2,1,1]
-len viene passato come argomento per evitare di ricalcolarlo internamente
-*/
-int **monomial_computation(int n, int m, int len) {
-
-	int **vet, *monomial;
-
-	//alloco la memoria per l'array
-	matrix_alloc_int(&vet, len, n);
-
-	//strutture di supporto necessarie per il calcolo
-	monomial = (int *)malloc(n * sizeof(int));
-	int pos = 0;
-
-	//il calcolo è fatto dalla funzione ricorsiva correttemente parametrizzata
-	monomial_computation_rec(n, m, vet, 0, monomial, &pos);
-
-	free(monomial);
-
-	return vet;
-}
-
-
-
-int init_matrix(int *matrix, int row, int col, int **vet_grd, char *variabili, int num_var, int(*ord) (void*, const void *, const void *), FILE *input_file) {
-	//Inizializza la matrice principale (dei coefficienti) con i coefficienti dei polinomi forniti come input.
-	return parse(num_var, variabili, matrix, row, vet_grd, col, module, ord, input_file);
-}
-
-
-
-void setup_struct_map(struct map *map, int **monomi, int len, int n, int m, int(*compar) (void*, const void *, const void *)) {
-
-	int sum, index = len;
-
-	//	inizializzo la struttura map, la mappa ha len righe.
-	map->len = len;
-	map->row = (map_row *)malloc(map->len * sizeof(struct map_row));
-
-	//per ogni monomio in vet
-	int row, col, i, v;
-	for (row = 0; row < len; row++) {
-		index = 0;
-		//dichiarati dentro per la parallelizzazione
-		int *temp = (int *)malloc(n * sizeof(int));
-		int *save = (int *)calloc(len, sizeof(int));
-		//provo a moltiplicarlo con ogni monomio in vet
-		for (col = 0; col < len; col++) {
-			sum = 0;
-			//eseguo il prodotto (sum è la somma dei gradi)
-			for (v = 0; v < n; v++) {
-				temp[v] = monomi[row][v] + monomi[col][v];
-				sum += temp[v];
-			}
-			//se il grado del prodotto > grado massimo tutti i restanti prodotti
-			//su quella riga sono > grado massimo
-			if (sum > m) {
-
-				//	a questo punto col è l'indice del primo elemento della mappa che non è possibile rappresentare, quindi la riga row ha solo col numero di celle e non len come prima.
-				index = col;
-				break;
-			}
-			//altrimenti cerco il prodotto in vet e metto l'indice in save
-			else {
-				save[col] = int((int **)(bsearch_r((void *)&temp, (void *)monomi, len, (sizeof(int*)), compar, &n)) - monomi);
-			}
-		}
-
-		//	terminato il ciclo sulle colonne posso inizializzare la struttura perchè conosco tutti gli elementi da inserire	
-		//  la riga attuale ha esattamente index elementi diversi da -1, quindi la riga avrà lunghezza pari a index precedentemente calcolato
-		//  alloco la riga con un array da index elementi
-
-		map->row[row].len = index;
-		map->row[row].col = (int *)malloc(map->row[row].len * sizeof(int));
-		//	a questo map devo copiare gli elementi generati dento alla struttura
-
-		for (i = 0; i<map->row[row].len; i++)
-			map->row[row].col[i] = save[i];
-
-		free(temp);
-		free(save);
-	}
-}
-
-void init_degree_vector(int *degree, int num_var) {
-	//inizializza il vettore degree con il numero di monomi di grado i-esimo <= del grado massimo
-	int i, c;
-	for (i = 0; i<max_degree + 1; i++) {
-		c = combination(num_var, i);
-		degree[i] = c;
-	}
-}
-
-int grado_monomio(int posizione, int **vet, int num_var) {
-	//Calcola il grado del monomio a partire dalla posizione occupata nel vettore (ordinato) delle posizioni rispetto l'ordinamento scelto.
-	//(la posizione occupata deve essere corretta).
-	int i, grado;
-	grado = 0;
-	for (i = 0; i<num_var; i++) {
-		grado += vet[posizione][i];
-	}
-	return grado;
-}
-
-void matrix_degree(int *m, int row, int col, int *m_deg, int **vet, int num_var) {
-	//m_deg è un vettore che ha lunghezza pari al grado massimo.
-	//la funzione calcola i gradi dei polinomi presenti nella matrice.
-	//Ogni cella del vettore m_deg rappresenta un grado, se esso compare nella matrice allora viene impostato a 1 o altrimenti.
-
-	int i, j, last, grado, linear_index = 0;
-	for (i = 0; i<row; i++) {
-		for (j = col - 1; j>0; j--) {
-			linear_index = i * col + j;
-			if (m[linear_index] != 0) {
-				last = j;           //posizione dell'ultimo coefficiente della riga
-				break;
-			}
-		}
-		grado = grado_monomio(last, vet, num_var);
-		m_deg[grado] = 1;
-	}
-}
-
-
-void moltiplica_matrice(int **m, int *row, int col, struct map map, int * degree, int **vet, int num_var, int expansion_degree) {
-
-	int riga;
-	int grado_massimo_riga, grado_massimo_monomio, i, j, last, new_row = 0;
-	last = -1;
-	int linear_index = 0;
-	long long total_dim = 0;
-	int *last_index = (int*)calloc(*row, sizeof(int));
-	int *numero_polinomi = (int*)calloc(*row, sizeof(int));
-	int numero_nuovi_polinomi = 0;
-
-	for (riga = 0; riga<*row; riga++) {
-		for (i = col - 1; i>0; i--) {
-			linear_index = riga * col + i;
-			if ((*m)[linear_index] != 0) {  //(*m)[riga][i] != 0
-				last = i;
-				break;
-			}
-		}
-		//risalgo al grado del monomio appena trovato
-		//scorro la lista delle posizioni di inizio dei monomi con lo stesso grado
-
-		last_index[riga] = last;
-
-		if (last != -1) {
-
-			grado_massimo_riga = grado_monomio(last, vet, num_var);
-
-			//calcolo il grado massimo che deve avere il monomio per cui moltiplicare
-			grado_massimo_monomio = max_degree - grado_massimo_riga;
-			// a questo punto conosco per quanti monomi devo moltiplicare e quindi
-			// conosco il numero di righe che devo aggiungere alla matrice
-			if (expansion_degree != 0) {
-				if (grado_massimo_monomio > expansion_degree) {
-					grado_massimo_monomio = expansion_degree;
-				}
-			}
-
-			for (i = 1; i<(grado_massimo_monomio + 1); i++) {
-				new_row += degree[i];
-				numero_nuovi_polinomi += degree[i];
-			}
-			numero_polinomi[riga] = numero_nuovi_polinomi;
-			numero_nuovi_polinomi = 0;
-		}
-	}
-
-	//--------------------------------------------------------------
-
-	//printf("nuove righe %d, totale righe %d", new_row, (*row+new_row) );
-
-	//ridimensionamento della matrice
-	total_dim = (*row * col) + (new_row * col);
-	*m = (int *)realloc(*m, total_dim * sizeof(int));
-	//azzeramento delle nuove righe
-	for (i = *row; i<*row + new_row; i++) {
-		for (j = 0; j<col; j++) {
-			(*m)[i*col + j] = 0;
-		}
-	}
-
-	int len = *row;
-	for (riga = 0; riga<len; riga++) {
-		if (last_index[riga] != -1) {
-			for (i = 1; i<(numero_polinomi[riga] + 1); i++) {     								//scorre tutti i monomi per i quali posso moltiplicare
-				for (j = 0; j<(last_index[riga] + 1); j++) {     								//scorre fino all'ultimo elemento della riga
-																								//(*m)[*row][ map.row[i].col[j] ] = (*m)[riga][j];  				//shift nella posizione corretta indicata dalla mappa
-					linear_index = *row * col + map.row[i].col[j];
-					(*m)[linear_index] = (*m)[riga*col + j];
-				}
-				*row = *row + 1;											//aumento del conteggio delle righe
-			}
-		}
-	}
-
-	free(last_index);
-	free(numero_polinomi);
-}
-
-void moltiplica_riga_forn(int **m, int *row, int col, int riga, struct map map, int * degree, int **vet, int num_var, int stop_degree) {
-
-	int grado_massimo_riga, grado_massimo_monomio, i, j, last, new_row;
-	last = -1;
-	int linear_index = 0;
-	long long total_dim = 0;
-	//cerco la posizione dell'ultimo coefficiente non nullo del polinomio rappresentato nella riga.
-	for (i = col - 1; i>0; i--) {
-		linear_index = riga * col + i;
-		if ((*m)[linear_index] != 0) {  //(*m)[riga][i] != 0
-			last = i;
-			break;
-		}
-	}
-	//risalgo al grado del monomio appena trovato
-	//scorro la lista delle posizioni di inizio dei monomi con lo stesso grado
-	if (last != -1) {
-
-		grado_massimo_riga = grado_monomio(last, vet, num_var);
-
-		//calcolo il grado massimo che deve avere il monomio per cui moltiplicare
-		grado_massimo_monomio = max_degree - grado_massimo_riga;
-		// a questo punto conosco per quanti monomi devo moltiplicare e quindi
-		// conosco il numero di righe che devo aggiungere alla matrice
-		new_row = 0;
-
-		for (i = 1; i<(grado_massimo_monomio + 1); i++) {
-			new_row += degree[i];
-		}
-
-		total_dim = (*row * col) + (new_row * col);
-		*m = (int *)realloc(*m, total_dim * sizeof(int));
-		//azzeramento delle nuove righe
-		for (i = *row; i<*row + new_row; i++) {
-			for (j = 0; j<col; j++) {
-				(*m)[i*col + j] = 0;
-			}
-		}
-
-		for (i = 1; i<(new_row + 1); i++) {     								//scorre tutti i monomi per i quali posso moltiplicare
-			for (j = 0; j<(last + 1); j++) {     								//scorre fino all'ultimo elemento della riga
-																				//(*m)[*row][ map.row[i].col[j] ] = (*m)[riga][j];  				//shift nella posizione corretta indicata dalla mappa
-				linear_index = *row * col + map.row[i].col[j];
-				(*m)[linear_index] = (*m)[riga*col + j];
-			}
-			*row = *row + 1;											//aumento del conteggio delle righe
-		}
-	}
-
-}
-
-int target_degree(int *v) {
-	//Controlla se il vettore v rappresenta la condizione di terminazione con gradi completi {1,2,3,...,max_degree}
-	//Se la condizione è soddisfatta return 0 altrimenti -1
-
-	int i, flag;
-	flag = 0;
-	for (i = 1; i<max_degree + 1; i++) {
-		if (v[i] != 1) {
-			flag = -1;
-			break;
-		}
-	}
-	return flag;
-}
-
-void print_incognite(int *m, int row, int col, int num_var, int **vet, FILE *output_file) {
-
-	int grado, last;
-
-	for (int r = row - (num_var + 1); r<row; r++) {
-
-		//cerca la posizione dell'ulitmo elemento non nullo della riga r
-		for (int i = col - 1; i >= 0; i--) {
-			if (m[r*col + i] != 0) { //m[r][i] != 0
-				last = i;
-				break;
-			}
-		}
-		//calcola il grado della riga r
-		grado = grado_monomio(last, vet, num_var);
-		//se il grado della riga r è 1 allora stampa tutta la riga della matrice
-		if (grado == 1) {
-			for (int j = 0; j<last + 1; j++) {
-				fprintf(output_file, "%d ", m[r*col + j]); //m[r][j]
-			}
-			fprintf(output_file, "\n\n");
-		}
-	}
-	fprintf(output_file, "\n");
-}
-
 
 //Scambio di due righe della matrice m.
 __device__ void swap_rows_GPU(int *m, int row, int col, int j, int i) {
@@ -331,14 +30,14 @@ __device__ void swap_rows_GPU(int *m, int row, int col, int j, int i) {
 	long long tmp;
 	if (j != i) {
 		for (k = 0;k<col;k++) {
-			tmp = m[i*col + k];			//m[i][k];
+			tmp = m[i*col + k];				//m[i][k];
 			m[i*col + k] = m[j*col + k];	//m[i][k] = m[j][k];
-			m[j*col + k] = tmp;			//m[j][k] = tmp;
+			m[j*col + k] = tmp;				//m[j][k] = tmp;
 		}
 	}
 }
 
-//n mod p 
+
 //Riduzione di n in modulo p.
 __device__ int mod_long_GPU(long long n, long long p) {
 	long long v = n, x = 0;
@@ -357,8 +56,6 @@ __device__ int mod_long_GPU(long long n, long long p) {
 	return r;
 }
 
-
-//n mod p 
 //Riduzione di n in modulo p.
 __device__ int mod_GPU(int n, int p) {
 	int v = n, x = 0;
@@ -577,7 +274,6 @@ __global__ void gauss_kernel_celle(int *matrix, int row, int col, int module) {
 			for (int x = pivot_row + 1; x < row; x++) {
 				matrix[x*col + pivot_col] = 0;
 			}
-
 		}
 	}
 }
@@ -613,12 +309,6 @@ __global__ void swap_rows(int *matrix, int row, int col, int j, int i) {
 }
 
 __global__ void find_pivot(int *matrix, int row, int col, int r, int pivot_col) {
-	/*
-	while( r < row && matrix[r*col+pivot_colonna] == 0 ){
-	r++;
-	}
-	pointer_r = r;
-	*/
 
 	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	int thread_row = r + tid;
@@ -826,7 +516,7 @@ void execute_standard(int **matrix, int * row, int col, struct map map, int *deg
 			}
 		}
 
-		moltiplica_matrice(matrix, row, col, map, degree, monomi, numero_variabili, missing_degree);
+		moltiplica_matrice(matrix, row, col, map, degree, monomi, numero_variabili, missing_degree, max_degree);
 
 		end = clock();
 		elapsed = ((double)(end - start)) / CLOCKS_PER_SEC;
@@ -854,7 +544,7 @@ void execute_standard(int **matrix, int * row, int col, struct map map, int *deg
 		matrix_degree(*matrix, *row, col, m_deg, monomi, numero_variabili);
 		print_matrix_degree(m_deg, output_file, max_degree);
 
-		if (target_degree(m_deg) == 0)
+		if (target_degree(m_deg, max_degree) == 0)
 			stop = 1;
 
 	}
@@ -932,7 +622,8 @@ int main(int argc, char *argv[]) {
 	qsort_s(monomi, numero_monomi, sizeof(int*), ord, &numero_variabili);
 
 	//inizializzazione matrice (lettura dati input)
-	if (init_matrix(matrix, row, col, monomi, variabili, numero_variabili, ord, input_file) == -1) {
+	
+	if (parse(numero_variabili, variabili, matrix, row, monomi, col, module, ord, input_file) == -1) {
 		fprintf(stderr, "Errore di input !!!\n\nTERMINAZIONE PROGRAMMA"); //se l'input è in formato scorrettro abort del programma
 		return 0;
 	}
@@ -953,7 +644,7 @@ int main(int argc, char *argv[]) {
 	start = clock();
 
 	//inizializzazione vettore dei gradi dei polinomi
-	init_degree_vector(degree, numero_variabili);
+	init_degree_vector(degree, numero_variabili, max_degree);
 
 	int n_loops = 30, expansion = 1;
 	//eseguo moltiplicazione e riduzione di Gauss finche non trovo soluzione

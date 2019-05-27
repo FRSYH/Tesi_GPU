@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "matrix.h"
-
+#include "utility.h"
 
 //Stampa formattata della matrice
 void print_matrix(long long **m, int row, int col, FILE *output_file) {
@@ -280,4 +280,158 @@ void print_matrix_degree(int *m_deg, FILE *output_file, int max_degree) {
 	for (i = 0; i<max_degree + 1; i++)
 		if (m_deg[i] != 0)	fprintf(output_file, " %d ", i);
 	fprintf(output_file, "}\n");
+}
+
+void moltiplica_matrice(int **m, int *row, int col, struct map map, int * degree, int **vet, int num_var, int expansion_degree, int max_degree) {
+
+	int riga;
+	int grado_massimo_riga, grado_massimo_monomio, i, j, last, new_row = 0;
+	last = -1;
+	int linear_index = 0;
+	long long total_dim = 0;
+	int *last_index = (int*)calloc(*row, sizeof(int));
+	int *numero_polinomi = (int*)calloc(*row, sizeof(int));
+	int numero_nuovi_polinomi = 0;
+
+	for (riga = 0; riga<*row; riga++) {
+		for (i = col - 1; i>0; i--) {
+			linear_index = riga * col + i;
+			if ((*m)[linear_index] != 0) {  //(*m)[riga][i] != 0
+				last = i;
+				break;
+			}
+		}
+		//risalgo al grado del monomio appena trovato
+		//scorro la lista delle posizioni di inizio dei monomi con lo stesso grado
+
+		last_index[riga] = last;
+
+		if (last != -1) {
+
+			grado_massimo_riga = grado_monomio(last, vet, num_var);
+
+			//calcolo il grado massimo che deve avere il monomio per cui moltiplicare
+			grado_massimo_monomio = max_degree - grado_massimo_riga;
+			// a questo punto conosco per quanti monomi devo moltiplicare e quindi
+			// conosco il numero di righe che devo aggiungere alla matrice
+			if (expansion_degree != 0) {
+				if (grado_massimo_monomio > expansion_degree) {
+					grado_massimo_monomio = expansion_degree;
+				}
+			}
+
+			for (i = 1; i<(grado_massimo_monomio + 1); i++) {
+				new_row += degree[i];
+				numero_nuovi_polinomi += degree[i];
+			}
+			numero_polinomi[riga] = numero_nuovi_polinomi;
+			numero_nuovi_polinomi = 0;
+		}
+	}	
+	//--------------------------------------------------------------
+	//printf("nuove righe %d, totale righe %d", new_row, (*row+new_row) );
+	//ridimensionamento della matrice
+	total_dim = (*row * col) + (new_row * col);
+	*m = (int *)realloc(*m, total_dim * sizeof(int));
+	//azzeramento delle nuove righe
+	for (i = *row; i<*row + new_row; i++) {
+		for (j = 0; j<col; j++) {
+			(*m)[i*col + j] = 0;
+		}
+	}
+
+	int len = *row;
+	for (riga = 0; riga<len; riga++) {
+		if (last_index[riga] != -1) {
+			for (i = 1; i<(numero_polinomi[riga] + 1); i++) {     								//scorre tutti i monomi per i quali posso moltiplicare
+				for (j = 0; j<(last_index[riga] + 1); j++) {     								//scorre fino all'ultimo elemento della riga
+																								//(*m)[*row][ map.row[i].col[j] ] = (*m)[riga][j];  				
+					linear_index = *row * col + map.row[i].col[j];
+					(*m)[linear_index] = (*m)[riga*col + j];
+				}
+				*row = *row + 1;											//aumento del conteggio delle righe
+			}
+		}
+	}
+
+	free(last_index);
+	free(numero_polinomi);
+}
+
+
+void moltiplica_riga_forn(int **m, int *row, int col, int riga, struct map map, int * degree, int **vet, int num_var, int stop_degree, int max_degree) {
+
+	int grado_massimo_riga, grado_massimo_monomio, i, j, last, new_row;
+	last = -1;
+	int linear_index = 0;
+	long long total_dim = 0;
+	//cerco la posizione dell'ultimo coefficiente non nullo del polinomio rappresentato nella riga.
+	for (i = col - 1; i>0; i--) {
+		linear_index = riga * col + i;
+		if ((*m)[linear_index] != 0) {  //(*m)[riga][i] != 0
+			last = i;
+			break;
+		}
+	}
+	//risalgo al grado del monomio appena trovato
+	//scorro la lista delle posizioni di inizio dei monomi con lo stesso grado
+	if (last != -1) {
+
+		grado_massimo_riga = grado_monomio(last, vet, num_var);
+
+		//calcolo il grado massimo che deve avere il monomio per cui moltiplicare
+		grado_massimo_monomio = max_degree - grado_massimo_riga;
+		// a questo punto conosco per quanti monomi devo moltiplicare e quindi
+		// conosco il numero di righe che devo aggiungere alla matrice
+		new_row = 0;
+
+		for (i = 1; i<(grado_massimo_monomio + 1); i++) {
+			new_row += degree[i];
+		}
+
+		total_dim = (*row * col) + (new_row * col);
+		*m = (int *)realloc(*m, total_dim * sizeof(int));
+		//azzeramento delle nuove righe
+		for (i = *row; i<*row + new_row; i++) {
+			for (j = 0; j<col; j++) {
+				(*m)[i*col + j] = 0;
+			}
+		}
+
+		for (i = 1; i<(new_row + 1); i++) {     								//scorre tutti i monomi per i quali posso moltiplicare
+			for (j = 0; j<(last + 1); j++) {     								//scorre fino all'ultimo elemento della riga
+																				//(*m)[*row][ map.row[i].col[j] ] = (*m)[riga][j];  				//shift nella posizione corretta indicata dalla mappa
+				linear_index = *row * col + map.row[i].col[j];
+				(*m)[linear_index] = (*m)[riga*col + j];
+			}
+			*row = *row + 1;											//aumento del conteggio delle righe
+		}
+	}
+
+}
+
+void print_incognite(int *m, int row, int col, int num_var, int **vet, FILE *output_file) {
+
+	int grado, last;
+
+	for (int r = row - (num_var + 1); r<row; r++) {
+
+		//cerca la posizione dell'ulitmo elemento non nullo della riga r
+		for (int i = col - 1; i >= 0; i--) {
+			if (m[r*col + i] != 0) { //m[r][i] != 0
+				last = i;
+				break;
+			}
+		}
+		//calcola il grado della riga r
+		grado = grado_monomio(last, vet, num_var);
+		//se il grado della riga r è 1 allora stampa tutta la riga della matrice
+		if (grado == 1) {
+			for (int j = 0; j<last + 1; j++) {
+				fprintf(output_file, "%d ", m[r*col + j]); //m[r][j]
+			}
+			fprintf(output_file, "\n\n");
+		}
+	}
+	fprintf(output_file, "\n");
 }

@@ -25,7 +25,7 @@ void allocation(int **matrix, int *row, int *col, int *numero_variabili, char **
 	fscanf(input_file, "%d", tipo_ordinamento);  //leggo tipo di ordinamento
 	fgetc(input_file);
 
-	int i, j, k, pos_pol, num_pol;
+	int i, pos_pol;
 	char c;
 
 	i = 0;
