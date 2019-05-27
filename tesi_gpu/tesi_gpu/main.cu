@@ -7,11 +7,10 @@
 #include <time.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
-#include <linalg.h>
-#include <matrix.h>
-#include <scan.h>
-
-
+#include "linalg.h"
+#include "matrix.h"
+#include "scan.h"
+#include "utility.h"
 
 // compilazione nvcc gm.cu -o gm -w -Xcompiler " -openmp"
 // nvcc gm.cu -o gm -w -Xcompiler " -openmp" -gencode arch=compute_61,code=sm_61 -lcudadevrt -rdc=true
@@ -22,69 +21,9 @@ __device__ int next_pivot_row = 0;
 int max_degree = 0;
 int module = 0;
 
-
-struct map_row {
-	int len;
-	int *col;
-};
-
-struct map {
-	int len;
-	struct map_row *row;
-};
-
-
 //----------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------
 
-/*funzione ricorsiva che calcola tutti i possibili monomi con n variabili e grado <= m
-e li inserisce nell'array vet. I monomi sono rappresentati come array di interi dove
-il valore di ogni posizione rappresenta il grado della variabile in quella posizione.
-Esempio: n=3, x^2*y*z = [2,1,1].
-L'array vet deve essere già allocato correttamente. Gli altri parametri sono necessari
-per la struttura ricorsiva della funzione e alla prima chiamata devono essere:
-- turn = 0, rappresenta la posizione della variabile nel monomio
-- monomial = array di interi di lunghezza n già allocato e usato per calcolare i vari monomi
-- *pos = 0 puntatore ad intero, rappresenta la prima posizione libera nell'array vet
-*/
-
-void monomial_computation_rec(int n, int m, int **vet, int turn, int *monomial, int *pos) {
-
-	//per ogni variabile provo tutti i gradi da 0 a m
-	for (int degree = 0; degree <= m; degree++) {
-		//se questa è la prima variabile azzero il monomio
-		if (turn == 0) {
-			//azzero il monomio lasciando solo il grado della prima variabile
-			monomial[0] = degree;
-			for (int v = 1; v < n; v++)
-				monomial[v] = 0;
-		}
-		//altrimenti le altre variabili aggiungo il proprio grado al monomio
-		else
-			monomial[turn] = degree;
-
-
-		//ottengo il grado del monomio sommando i gradi delle variabili
-		int sum = 0;
-		for (int v = 0; v <= turn; v++)
-			sum += monomial[v];
-		//se il grado del monomio supera quello massimo non ha senso continuare a cercare
-		//altri monomi partendo da questo, perchè tutti avranno grado maggiore o uguale
-		if (sum > m)
-			break;
-
-		//se questa è l'ultima variabile copia il monomio nell'array vet and incrementa l'indice pos
-		if (turn == (n - 1)) {
-			vctcpy(vet[(*pos)], monomial, n);
-			(*pos)++;
-		}
-		//altrimenti richiama se stessa cambiando la variabile (turn)
-		else
-			monomial_computation_rec(n, m, vet, turn + 1, monomial, pos);
-	}
-
-	return;
-}
 
 /*restituisce un array contenente tutti i len monomi con n variabili e grado <= m
 len è il numero di possibili monomi con n variabili e grado <= m
@@ -153,7 +92,7 @@ void setup_struct_map(struct map *map, int **monomi, int len, int n, int m, int(
 			}
 			//altrimenti cerco il prodotto in vet e metto l'indice in save
 			else {
-				save[col] =  int((int **)(bsearch_r((void *)&temp, (void *)monomi, len, (sizeof(int*)), compar, &n)) - monomi);
+				save[col] = int((int **)(bsearch_r((void *)&temp, (void *)monomi, len, (sizeof(int*)), compar, &n)) - monomi);
 			}
 		}
 
@@ -211,6 +150,7 @@ void matrix_degree(int *m, int row, int col, int *m_deg, int **vet, int num_var)
 		m_deg[grado] = 1;
 	}
 }
+
 
 void moltiplica_matrice(int **m, int *row, int col, struct map map, int * degree, int **vet, int num_var, int expansion_degree) {
 
@@ -340,6 +280,47 @@ void moltiplica_riga_forn(int **m, int *row, int col, int riga, struct map map, 
 		}
 	}
 
+}
+
+int target_degree(int *v) {
+	//Controlla se il vettore v rappresenta la condizione di terminazione con gradi completi {1,2,3,...,max_degree}
+	//Se la condizione è soddisfatta return 0 altrimenti -1
+
+	int i, flag;
+	flag = 0;
+	for (i = 1; i<max_degree + 1; i++) {
+		if (v[i] != 1) {
+			flag = -1;
+			break;
+		}
+	}
+	return flag;
+}
+
+void print_incognite(int *m, int row, int col, int num_var, int **vet, FILE *output_file) {
+
+	int grado, last;
+
+	for (int r = row - (num_var + 1); r<row; r++) {
+
+		//cerca la posizione dell'ulitmo elemento non nullo della riga r
+		for (int i = col - 1; i >= 0; i--) {
+			if (m[r*col + i] != 0) { //m[r][i] != 0
+				last = i;
+				break;
+			}
+		}
+		//calcola il grado della riga r
+		grado = grado_monomio(last, vet, num_var);
+		//se il grado della riga r è 1 allora stampa tutta la riga della matrice
+		if (grado == 1) {
+			for (int j = 0; j<last + 1; j++) {
+				fprintf(output_file, "%d ", m[r*col + j]); //m[r][j]
+			}
+			fprintf(output_file, "\n\n");
+		}
+	}
+	fprintf(output_file, "\n");
 }
 
 
@@ -787,8 +768,6 @@ __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, in
 	}
 }
 
-
-
 double gauss_GPU(int *m, int row, int col, int module) {
 
 	int matrix_length = row * col;
@@ -814,63 +793,6 @@ double gauss_GPU(int *m, int row, int col, int module) {
 }
 
 
-int null_rows(int *m, int row, int col) {
-	//calcola il numero di righe nulle presenti nella matrice m.
-
-	int i, j, last, null_rows;
-	null_rows = 0;
-	for (i = 0; i<row; i++) {
-		last = -1;
-		for (j = col - 1; j>-1; j--) {
-			if (m[i*col + j] != 0) {
-				last = j;
-				break;
-			}
-		}
-		if (last == -1)
-			null_rows++;
-	}
-	return null_rows;
-}
-
-void eliminate_null_rows(int **m, int *row, int col) {
-	//Elimina dalla matrice m le righe nulle.
-	//N.B. questa procedura elimina le ultime righe nulle della matrice.
-	//Questa funzione DEVE essere utilizzata dopo la riduzione di Gauss.
-	//La riduzione di Gauss sposta nelle ultime posizioni tutte le righe nulle.
-	//Se non si esegue questa funzione dopo Gauss si possono eliminare righe non nulle.	
-
-	int null_row = null_rows(*m, *row, col);
-	int new_rows = *row - null_row;
-	if (null_row != 0) {
-		*m = (int *)realloc(*m, (new_rows*col) * sizeof(int));
-		*row = new_rows;
-	}
-}
-
-void print_matrix_degree(int *m_deg, FILE *output_file) {
-	//stampa il vettore dei gradi della matrice.
-	int i;
-	fprintf(output_file, "Gradi della matrice = {");
-	for (i = 0; i<max_degree + 1; i++)
-		if (m_deg[i] != 0)	fprintf(output_file, " %d ", i);
-	fprintf(output_file, "}\n");
-}
-
-int target_degree(int *v) {
-	//Controlla se il vettore v rappresenta la condizione di terminazione con gradi completi {1,2,3,...,max_degree}
-	//Se la condizione è soddisfatta return 0 altrimenti -1
-
-	int i, flag;
-	flag = 0;
-	for (i = 1; i<max_degree + 1; i++) {
-		if (v[i] != 1) {
-			flag = -1;
-			break;
-		}
-	}
-	return flag;
-}
 
 void execute_standard(int **matrix, int * row, int col, struct map map, int *degree, int **monomi, int numero_variabili, int n_loops, int expansion, FILE *output_file) {
 
@@ -930,7 +852,7 @@ void execute_standard(int **matrix, int * row, int col, struct map map, int *deg
 		fprintf(output_file, "numero righe: %d               (%f sec)\n", *row, elapsed);
 
 		matrix_degree(*matrix, *row, col, m_deg, monomi, numero_variabili);
-		print_matrix_degree(m_deg, output_file);
+		print_matrix_degree(m_deg, output_file, max_degree);
 
 		if (target_degree(m_deg) == 0)
 			stop = 1;
@@ -941,32 +863,6 @@ void execute_standard(int **matrix, int * row, int col, struct map map, int *deg
 	free(m_deg_array);
 }
 
-
-void print_incognite(int *m, int row, int col, int num_var, int **vet, FILE *output_file) {
-
-	int grado, last;
-
-	for (int r = row - (num_var + 1); r<row; r++) {
-
-		//cerca la posizione dell'ulitmo elemento non nullo della riga r
-		for (int i = col - 1; i >= 0; i--) {
-			if (m[r*col + i] != 0) { //m[r][i] != 0
-				last = i;
-				break;
-			}
-		}
-		//calcola il grado della riga r
-		grado = grado_monomio(last, vet, num_var);
-		//se il grado della riga r è 1 allora stampa tutta la riga della matrice
-		if (grado == 1) {
-			for (int j = 0; j<last + 1; j++) {
-				fprintf(output_file, "%d ", m[r*col + j]); //m[r][j]
-			}
-			fprintf(output_file, "\n\n");
-		}
-	}
-	fprintf(output_file, "\n");
-}
 
 int main(int argc, char *argv[]) {
 

@@ -22,10 +22,10 @@ void matrix_realloc_long(long long ***m, int new_row, int new_col);
 void add_row_to_matrix(long long ***m, int *row, int col, long long *r);
 
 //compute the number of null rows (rows full of 0)
-int null_rows(long long **m, int row, int col);
+int null_rows(int *m, int row, int col);
 
 //eliminate the matrix null rows (reallocation - resize)
-void eliminate_null_rows(long long ***m, int *row, int col);
+void eliminate_null_rows(int **m, int *row, int col);
 
 void append_matrix(long long ***m1, int *row1, int col1, long long **m2, int row2, int col2);
 
@@ -46,5 +46,6 @@ void delete_row(long long ***m, int *row, int col, int index);
 //elimina da m1 le righe uguali a quelle di m2
 void eliminate_equal_rows(long long ***m1, int *row1, long long **m2, int row2, int col);
 
+void print_matrix_degree(int *m_deg, FILE *output_file, int max_degree);
 
 #endif //MATRIX_H_

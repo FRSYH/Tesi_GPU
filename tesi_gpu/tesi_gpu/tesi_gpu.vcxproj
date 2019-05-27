@@ -103,11 +103,13 @@
     <ClCompile Include="linalg.cpp" />
     <ClCompile Include="matrix.cpp" />
     <ClCompile Include="scan.cpp" />
+    <ClCompile Include="utility.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="linalg.h" />
     <ClInclude Include="matrix.h" />
     <ClInclude Include="scan.h" />
+    <ClInclude Include="utility.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

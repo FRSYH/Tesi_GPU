@@ -24,7 +24,7 @@ void vctcpy(int *vet1, const int *vet2, int len) {
 	return;
 }
 
-int null_rows(long long **m, int row, int col) {
+int null_rows(int *m, int row, int col) {
 	//calcola il numero di righe nulle presenti nella matrice m.
 
 	int i, j, last, null_rows;
@@ -32,7 +32,7 @@ int null_rows(long long **m, int row, int col) {
 	for (i = 0; i<row; i++) {
 		last = -1;
 		for (j = col - 1; j>-1; j--) {
-			if (m[i][j] != 0) {
+			if (m[i*col + j] != 0) {
 				last = j;
 				break;
 			}
@@ -43,7 +43,7 @@ int null_rows(long long **m, int row, int col) {
 	return null_rows;
 }
 
-void eliminate_null_rows(long long ***m, int *row, int col) {
+void eliminate_null_rows(int **m, int *row, int col) {
 	//Elimina dalla matrice m le righe nulle.
 	//N.B. questa procedura elimina le ultime righe nulle della matrice.
 	//Questa funzione DEVE essere utilizzata dopo la riduzione di Gauss.
@@ -53,10 +53,7 @@ void eliminate_null_rows(long long ***m, int *row, int col) {
 	int null_row = null_rows(*m, *row, col);
 	int new_rows = *row - null_row;
 	if (null_row != 0) {
-		for (int i = new_rows; i < *row; i++) {
-			free((*m)[i]);
-		}
-		*m = (long long **) realloc(*m, new_rows * sizeof(long long *));
+		*m = (int *)realloc(*m, (new_rows*col) * sizeof(int));
 		*row = new_rows;
 	}
 }
@@ -275,3 +272,12 @@ void eliminate_equal_rows(long long ***m1, int *row1, long long **m2, int row2, 
 	return;
 }
 
+
+void print_matrix_degree(int *m_deg, FILE *output_file, int max_degree) {
+	//stampa il vettore dei gradi della matrice.
+	int i;
+	fprintf(output_file, "Gradi della matrice = {");
+	for (i = 0; i<max_degree + 1; i++)
+		if (m_deg[i] != 0)	fprintf(output_file, " %d ", i);
+	fprintf(output_file, "}\n");
+}
