@@ -12,7 +12,7 @@
 // compilazione nvcc gm.cu -o gm -w -Xcompiler " -openmp"
 // nvcc gm.cu -o gm -w -Xcompiler " -openmp" -gencode arch=compute_61,code=sm_61 -lcudadevrt -rdc=true
 
-__device__ int pointer_r = 0;
+__device__ int next_pivot_row = 0;
 
 //dichiarazione variabili globali
 int max_degree = 0;
@@ -1090,7 +1090,7 @@ __global__ void find_pivot(int *matrix, int row, int col, int r, int pivot_colon
 	if(thread_row >= row)
 		return;
 	if(matrix[thread_row*col+pivot_colonna] != 0){
-		atomicMin(&pointer_r, thread_row);
+		atomicMin(&next_pivot_row, thread_row);
 	}
 }
 
@@ -1123,10 +1123,10 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, i
 			block_x_axis = 1;
 		}				
 		dim3 b_find(block_x_axis);	
-		pointer_r = row;	
+		next_pivot_row = row;	
 		find_pivot<<<b_find, t_find>>>(matrix, row, col, r, pivot_colonna);
 		cudaDeviceSynchronize();
-		r = pointer_r;
+		r = next_pivot_row;
 		/////////////////////////////////////////////////////////////////////////////////
 		// ho trovato la prima riga con elemento non nullo in posizione r e pivot_colonna oppure non esiste nessuna riga con elemento non nullo in posizione pivot_colonna
 		if( r < row ){

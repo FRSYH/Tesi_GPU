@@ -1,0 +1,53 @@
+ATTACCO ALGEBRICO
+
+un'attacco algebrico è un particolare tipo di attacco crittografico che fa uso dell'algebra lineare per attaccare un cifrario. L'attacco si compone 
+di due fasi. Nella prima fase si effettua una traduzione del cifrario che deve essere attaccato in un sistema di equazioni polinomiali con coefficienti
+in un campo finito, il modulo è quindi un numero primo. Nella seconda fase si procede alla risoluzione di questo sistema, e dalla soluzione trovata 
+si può estrarre la chiave segreta o parte di essa. Questo attacco è molto inteessante per via della sua versatilità, infatti tale attacco è applicabile
+a tutti i cifrari che sono scrivibili come un sistema di equazioni, la grande potenzialità è che tutti i cifrari realizzati fino ad oggi possiedono
+questa caratteristica. 
+
+L'attacco algebrico risulta quindi un attacco che può essere utilizzato su qualsiasi cifrario, tuttavia è ancora poco conosciuto rispetto alle altre
+tecniche di crittoanalisi e questo è dovuto alla sua complessità computazionale. Infatti senza entrare troppo nel dettaglio nella teoria della complessità
+la fase di risoluzione di un sistema di equazioni lineari in campo finito è classificato come NP-complete. Un problema con questa complessità risulta
+irrisolvibile per istanze di grosse dimensioni, e anche con piccole dimensioni i tempi di esecuzione sono elevati. Tuttavia il parallelismo potrebbe 
+portare in alcuni casi dei beniefici da non sottovalutare.
+
+RISOLVERE IL SISTEMA
+Risolvere il sistema di equazioni che descrive il cifrario in discusisone è il punto centrale dell'attacco algebrico. Esistono diverse tecniche per risolvere tale sistema, alcune banali altre più ricercate e complesse. Molte di queste tecniche hanno benefici su particolari istanze di problema o in determinata condizioni. Il sistema di risoluzione qui esposto (realizzato come lavoro di tesi) si compone di due fasi: 
+
+Fase di espansione: si espande il sistema aggiungendo delle equazioni.
+Fase di riduazione: si riduce il sistema con l'algoritmo di riduzione di Gauss (si eliminano le equazioni linearmente dipendenti).
+
+si ripetono queste fasi fino alla soluzione completa del sistema. La fase di espansione è necessario perché il sistema di partenza non è direttamente 
+risolvibile, non possiede sufficienti equazioni.
+
+RIDUZIONE DI GAUSS E PARALLELISMO
+Il Fulcro di tutto il sistema è quindi la riduzione di Gauss di un sistema di equazioni polinomilai modulari. Questo algoritmo rappresenta il sistema in una matrice e ripete un seti di operazioni consentite per ridurre la matrice in una matrice a scalini, ottenuta qeusta forma il sistema può essere risolto per sostituzione inversa. Fortunatamente questo algoritmo è per sua natura parzialmente parallelizzabile. Ci sono diverse varianti di questo algoritmo, qui viene utilizzata la riduzione di gauss con pivot completo. Come da pseudocodice si nota che i due cicli interni effettuano operazioni completamente indipendenti su dati indipendenti, percio tali operazioni possono essere eseguite completamente in parallelo. Nella realizzazione del sistema si è sfruttato il parallelismo su CPU per velocizzare il più possibile la computazione, tuttavia data la natura fortemente parallela di una porzione dell'algoritmo è senza dubbio interessante verificare come il parallelismo di una GPU possa influenzare tale computazione.
+
+IMPLEMENTAZIONE CUDA
+Come detto in precedenza esistono tanti metodi per rislvere il sistema in esame, la riduzione di gauss è senza dubbio uno dei metodi più banali, tuttavia 
+fornisce al progamma una generalità (non sfrutta nessuna condizine specifica, funziona sempre) che le altre tecniche non forniscono. La stessa riduzione di 
+Gauss può essere effettuata in diversi modi, ciononostante lo scopo di questo progetto è quello di comparare lo stesso algoritmo su CPU e GPU percui
+non vengono utilizzate diverse risoluzioni come decomposiszione LU, ecc.
+
+Il problema e gli elementi su cui bisogna lavorare sono più chiari dall'immagine. Si noti che, dopo aver identificato una colonna e riga pivot, deve essere 
+ridotta tutta la sottomatrice (di colore giallo) sottostante il pivot per ottenere l'i-esimo scalino (colonna pivot ridotta a 0 a partire dalla riga
+sottostante il pivot). La riduzione di questa porzione di matrice può avvenire in modo completamente parallelo.
+
+Sono state realizzate tre tecniche:
+- celle, il kernel effettua la riduzione di una sola cella
+- righe, il kernel effettua la riduzione di una riga 
+- blocco, il kernel effettua la riduzione di un blocco della colonna
+
+Prima di procedere oltre è necessario riflettere su come implementare il ciclo esterno, tale operazione infatti non è parallelizzabile, si possono adottare
+due scelte:
+- effettuare il ciclo esterno su CPU in modo veloce ed efficiente per poi trasferire su GPU la matrice e risolvere la riduzione in parallelo
+- effettuare il ciclo esterno su un singolo kernel in modo poco efficiente e sfruttare il parallelismo dinamico per lanciare la riduzione successiva.
+
+La prima tecnica per quanto possa sembare appetibile non è utilizzabile in quanto il numero di trasferimenti della matrice risulta essere troppo elevato,
+quando la dimensione della matrice inizia a crescere i trasferimenti diventano insostenibili. La seconda tecnica sacrifica le performance del ciclo esterno
+per mantenere la matrice sempre in memoria globale della GPU evitando continui e costosissimi trasferimenti di memoria con la CPU. Per tanto si sono realizzate le tre tecniche precedenti sfruttando il parallelismo dinamico.
+
+RISULTATI OTTENUTI
+Di seguito si forniscono i risultati ottenuti con le tre diverse teniche: cella, riga, blocco. Non si espone ne si commenta esplicitamente il codice realizzato per brevità e chiarezza. 

@@ -1,0 +1,44 @@
+
+Inizializzazione in 0.001000 sec
+
+Mappa creata in 0.088000 sec,   1330 x 1330 
+
+Inizio computazione, metodo standard
+
+ -Eseguo moltiplicazione, numero righe: 1040     (0.005000 sec)
+ -Eseguo Gauss, numero righe: 980               (0.088000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18 }
+
+ -Eseguo moltiplicazione, numero righe: 11724     (0.077000 sec)
+ -Eseguo Gauss, numero righe: 1020               (0.238000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18 }
+
+ -Eseguo moltiplicazione, numero righe: 12524     (0.080000 sec)
+ -Eseguo Gauss, numero righe: 1128               (0.456000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18 }
+
+ -Eseguo moltiplicazione, numero righe: 14684     (0.092000 sec)
+ -Eseguo Gauss, numero righe: 1230               (0.613000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18 }
+
+ -Eseguo moltiplicazione, numero righe: 16724     (0.111000 sec)
+ -Eseguo Gauss, numero righe: 1296               (0.699000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18 }
+
+ -Eseguo moltiplicazione, numero righe: 18044     (0.119000 sec)
+ -Eseguo Gauss, numero righe: 1326               (0.729000 sec)
+Gradi della matrice = { 2  3  4  5  6  7  8  9  10  11  12  13  14  15  16  17  18 }
+
+ -Eseguo moltiplicazione, numero righe: 4734     (0.030000 sec)
+ -Eseguo Gauss, numero righe: 1329               (0.281000 sec)
+Gradi della matrice = { 1  2  3  4  5  6  7  8  9  10  11  12  13  14  15  16  17  18 }
+
+Target raggiunto, soluzione trovata in 4.186000 sec
+
+16472 2330 5904 17819 
+
+31907 23832 7594 
+
+25338 14085 
+
+
