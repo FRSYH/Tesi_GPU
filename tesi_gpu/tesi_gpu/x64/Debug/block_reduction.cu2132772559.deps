@@ -183,18 +183,8 @@ c:\program files\nvidia gpu computing toolkit\cuda\v10.1\include\surface_indirec
 c:\program files\nvidia gpu computing toolkit\cuda\v10.1\include\cuda_runtime_api.h
 c:\program files\nvidia gpu computing toolkit\cuda\v10.1\include\device_launch_parameters.h
 c:\program files\nvidia gpu computing toolkit\cuda\v10.1\include\vector_types.h
-C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\ucrt\stdio.h
-C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\ucrt\corecrt_wstdio.h
-C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\ucrt\corecrt_stdio_config.h
-C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\ucrt\ctype.h
-C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\ucrt\corecrt_wctype.h
-C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.13.26128\include\stdbool.h
 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include\cuda_runtime.h
 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include\device_launch_parameters.h
-c:\users\martino\onedrive\unimi\magistrale\gpu computing\tesi_gpu\tesi_gpu\tesi_gpu\linalg.h
-c:\users\martino\onedrive\unimi\magistrale\gpu computing\tesi_gpu\tesi_gpu\tesi_gpu\matrix.h
-c:\users\martino\onedrive\unimi\magistrale\gpu computing\tesi_gpu\tesi_gpu\tesi_gpu\scan.h
-c:\users\martino\onedrive\unimi\magistrale\gpu computing\tesi_gpu\tesi_gpu\tesi_gpu\utility.h
 c:\users\martino\onedrive\unimi\magistrale\gpu computing\tesi_gpu\tesi_gpu\tesi_gpu\utility_cuda.cuh
 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include\cuda_runtime.h
 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include\device_launch_parameters.h

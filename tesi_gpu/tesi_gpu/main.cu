@@ -11,6 +11,7 @@
 #include "matrix.h"
 #include "scan.h"
 #include "utility.h"
+#include "utility_cuda.cuh"
 
 // compilazione nvcc gm.cu -o gm -w -Xcompiler " -openmp"
 // nvcc gm.cu -o gm -w -Xcompiler " -openmp" -gencode arch=compute_61,code=sm_61 -lcudadevrt -rdc=true
@@ -22,99 +23,6 @@ int max_degree = 0;
 int module = 0;
 
 //----------------------------------------------------------------------------------------------------------------
-
-//Scambio di due righe della matrice m.
-__device__ void swap_rows_GPU(int *m, int row, int col, int j, int i) {
-
-	int k;
-	long long tmp;
-	if (j != i) {
-		for (k = 0;k<col;k++) {
-			tmp = m[i*col + k];				//m[i][k];
-			m[i*col + k] = m[j*col + k];	//m[i][k] = m[j][k];
-			m[j*col + k] = tmp;				//m[j][k] = tmp;
-		}
-	}
-}
-
-
-//Riduzione di n in modulo p.
-__device__ int mod_long_GPU(long long n, long long p) {
-	long long v = n, x = 0;
-
-	if (v >= p) {
-		v = n % p;
-	}
-	else {
-		if (v < 0) {
-			x = n / p;
-			v = n - (x*p);
-			v += p;
-		}
-	}
-	int r = v;
-	return r;
-}
-
-//Riduzione di n in modulo p.
-__device__ int mod_GPU(int n, int p) {
-	int v = n, x = 0;
-
-	if (v >= p) {
-		v = n % p;
-	}
-	else {
-		if (v < 0) {
-			x = n / p;
-			v = n - (x*p);
-			v += p;
-		}
-	}
-	return v;
-}
-
-
-//inverso moltiplicativo di n in modulo p (con p primo).
-__device__ int invers_GPU(int n, int p) {
-	int b0 = p, t, q;
-	int x0 = 0, x1 = 1;
-	if (p == 1) return 1;
-	while (n > 1) {
-		q = n / p;
-		t = p, p = (n % p), n = t;
-		t = x0, x0 = x1 - q * x0, x1 = t;
-	}
-	if (x1 < 0) x1 += b0;
-	return x1;
-}
-
-
-// a + b mod p
-//sommatoria di a e b in modulo p
-__device__ int add_mod_GPU(int a, int b, int p) {
-	return mod_GPU((a + b), p);
-}
-
-// a - b mod p
-//sottrazione di a e b in modulo p
-__device__ int sub_mod_GPU(int a, int b, int p) {
-	long long aa, bb;
-	aa = a;
-	bb = b;
-	return mod_long_GPU((aa - bb), p);
-}
-
-// a * b mod p
-//prodotto di a e b in modulo p
-__device__ int mul_mod_GPU(int a, int b, int p) {
-	long long aa, bb;
-	aa = a;
-	bb = b;
-	return mod_long_GPU((aa*bb), p);
-}
-
-
-
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort = true)
 {
@@ -125,100 +33,16 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
 	}
 }
 
+__global__ void find_pivot(int *matrix, int row, int col, int r, int pivot_col) {
 
-
-__global__ void submatrix_reduction_by_block(int *matrix, int row, int col, int module, int pivot_col, int inv, int pivot_row, int thread_height, int block_dim) {
-
-	extern __shared__ int smem[];
-
-	int *smem_pivot_row = (int*)smem;
-	int *smem_pivot_col = (int*)&smem_pivot_row[block_dim];
-
-	int x = 0, y = 0, interation = 0;
-	int col_index = blockIdx.x * blockDim.x + threadIdx.x;	//indice della colonna della matrice originale per il thread corrente
-
-	//-------------
-	//inizzializzazione smem per pivot riga
-	smem_pivot_row[threadIdx.x] = matrix[pivot_row * col + col_index];	//ogni thread copia un solo elemento nella riga in shared, un thread per cella di riga
-	//------------
-	//inizializzazione smem per pivot colonna
-
-	//calcolo del numero di celle (colonna_pivot) che ogni thred deve copiare
-	int cell_to_copy = 1;
-	if (thread_height > blockDim.x) {
-		cell_to_copy = thread_height / blockDim.x + 1;
-	}
-
-	int base_row = (pivot_row + 1) + blockIdx.y * thread_height;
-	int index = 0;
-	//copia della porzione di colonna in smem
-	for (int i = 0; i<cell_to_copy; i++) {
-		index = (threadIdx.x * cell_to_copy) + i;
-		if (base_row + index < row && index < thread_height) {
-			smem_pivot_col[index] = matrix[(base_row + index) * col + pivot_col];
-		}
-	}
-	//sincronizza tutti i thread del blocco in modo tale che la smem sia consistente
-	__syncthreads();
-
-	if (col_index < pivot_col) {
-		//calcolo del numero di righe sulle quali deve iterare il thread, caso in cui la dimensione della matrice non collima con thread_height
-		int reached_row = (pivot_row + 1) + ((blockIdx.y + 1) * thread_height); //riga raggiunta dal thread corrente
-		if (reached_row > row) {
-			interation = thread_height - (reached_row - row);	//dimensione non collima
-		}
-		else {
-			interation = thread_height;	//caso normale
-		}
-
-		int row_offset = (pivot_row + 1) + (blockIdx.y * thread_height);
-
-		for (int i = 0; i<interation; i++) {
-			int pivot_element = smem_pivot_col[i];
-			if (pivot_element != 0) {
-				y = mul_mod_GPU(inv, pivot_element, module);		//tutti i thread sulla stessa riga calcolano lo stesso risultato
-				x = mul_mod_GPU(y, smem_pivot_row[threadIdx.x], module);
-				matrix[row_offset * col + col_index] = sub_mod_GPU(matrix[row_offset * col + col_index], x, module);
-			}
-			row_offset++;
-		}
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
+	int thread_row = r + tid;
+	if (thread_row >= row)
+		return;
+	if (matrix[thread_row*col + pivot_col] != 0) {
+		atomicMin(&next_pivot_row, thread_row);
 	}
 }
-
-
-
-__global__ void submatrix_reduction_by_row(int *matrix, int row, int col, int module, int start, int pivot_col, int inv, int pivot_row, int cell_per_thread) {
-
-	extern __shared__ int smem[];
-	if ((threadIdx.x * cell_per_thread) <= pivot_col) {
-		int row_offset = pivot_row * col;
-		int thread_offset = threadIdx.x * cell_per_thread;
-		//allocazione della smem con la riga di pivot, ogni thread copia una porzione di riga pari a "cell_per_thread".
-		for (int i = 0; i<cell_per_thread; i++) {
-			if (thread_offset + i <= pivot_col) {
-				smem[thread_offset + i] = matrix[row_offset + thread_offset + i];
-			}
-		}
-	}
-
-	__syncthreads();
-
-	int x = 0, y = 0;
-	int row_index = (pivot_row + 1) + (blockDim.x * blockIdx.x + threadIdx.x);
-	if (row_index >= start && row_index < row) {
-
-		int row_linear_index = row_index * col + pivot_col;
-		if (matrix[row_linear_index] != 0) {
-			y = mul_mod_GPU(inv, matrix[row_linear_index], module);
-			for (int k = 0; k < pivot_col + 1; k++) {
-				//a = mul_mod_GPU(s,matrix[pivot_riga*col+k],module);
-				x = mul_mod_GPU(y, smem[k], module);
-				matrix[row_index*col + k] = sub_mod_GPU(matrix[row_index*col + k], x, module);
-			}
-		}
-	}
-}
-
 
 __global__ void submatrix_reduction_by_cell(int *matrix, int row, int col, int module, int inv, int pivot_col, int pivot_row) {
 	
@@ -277,137 +101,34 @@ __global__ void gaussian_reduction_by_cell(int *matrix, int row, int col, int mo
 	}
 }
 
-__global__ void reset_pivot_col(int *matrix, int row, int col, int pivot_row, int pivot_col, int thread_height, int block_dim) {
+__global__ void submatrix_reduction_by_row(int *matrix, int row, int col, int module, int start, int pivot_col, int inv, int pivot_row, int cell_per_thread) {
 
-	int start_row = (pivot_row + 1) + ((blockIdx.x * (thread_height*block_dim)) + (threadIdx.x * thread_height));
-	int reached_row = (pivot_row + 1) + ((blockIdx.x * (thread_height*block_dim)) + ((threadIdx.x + 1) * thread_height));
-	int iteration = thread_height;
-	if (reached_row > row) {
-		iteration = thread_height - (reached_row - row);
-		if (iteration > thread_height) {
-			iteration = 0;
+	extern __shared__ int smem[];
+	if ((threadIdx.x * cell_per_thread) <= pivot_col) {
+		int row_offset = pivot_row * col;
+		int thread_offset = threadIdx.x * cell_per_thread;
+		//allocazione della smem con la riga di pivot, ogni thread copia una porzione di riga pari a "cell_per_thread".
+		for (int i = 0; i<cell_per_thread; i++) {
+			if (thread_offset + i <= pivot_col) {
+				smem[thread_offset + i] = matrix[row_offset + thread_offset + i];
+			}
 		}
 	}
 
-	for (int i = 0; i<iteration; i++) {
-		matrix[(start_row + i)*col + pivot_col] = 0;
-	}
-}
+	__syncthreads();
 
-__global__ void swap_rows(int *matrix, int row, int col, int j, int i) {
+	int x = 0, y = 0;
+	int row_index = (pivot_row + 1) + (blockDim.x * blockIdx.x + threadIdx.x);
+	if (row_index >= start && row_index < row) {
 
-	int tid = blockIdx.x * blockDim.x + threadIdx.x;
-	if (tid >= col) {
-		return;
-	}
-	int ii = i * col + tid;
-	int jj = j * col + tid;
-	int tmp = matrix[ii];
-	matrix[ii] = matrix[jj];
-	matrix[jj] = tmp;
-}
-
-__global__ void find_pivot(int *matrix, int row, int col, int r, int pivot_col) {
-
-	int tid = blockIdx.x * blockDim.x + threadIdx.x;
-	int thread_row = r + tid;
-	if (thread_row >= row)
-		return;
-	if (matrix[thread_row*col + pivot_col] != 0) {
-		atomicMin(&next_pivot_row, thread_row);
-	}
-}
-
-
-
-__global__ void gaussian_reduction_by_block(int *matrix, int row, int col, int module, int dim) {
-
-	int pivot_row = 0, r = 0, rows_found = 0;
-	int inv;
-	int block_dim = 0;
-	int threads_per_block = 0;
-	int block_x_axis, block_y_axis = 0;
-
-	for (int pivot_col = col - 1; pivot_col >= 0; pivot_col--) {
-		r = rows_found;
-		///////////////////////////FIND PIVOT///////////////////////////////////////////////
-		block_dim = 256;
-		int row_to_check = row - rows_found;
-		threads_per_block = (row_to_check < block_dim ? row_to_check : block_dim);
-		dim3 t_find(threads_per_block);
-
-		if (threads_per_block == block_dim && row_to_check != block_dim) {
-			block_x_axis = (row_to_check / block_dim) + 1;
-		}
-		else {
-			block_x_axis = 1;
-		}
-		dim3 b_find(block_x_axis);
-		next_pivot_row = row;
-		find_pivot<<<b_find, t_find>>>(matrix, row, col, r, pivot_col);
-		cudaDeviceSynchronize();
-		r = next_pivot_row;
-		/////////////////////////////////////////////////////////////////////////////////
-		if (r < row) {
-			if (r != rows_found) {
-				////////////////////////SWAP ROWS////////////////////////////////////////////////////////
-				block_dim = 256;
-				threads_per_block = (col < block_dim ? col : block_dim);
-				dim3 t_swap(threads_per_block);
-
-				if (threads_per_block == block_dim && col != block_dim) {
-					block_x_axis = (col / block_dim) + 1;
-				}
-				else {
-					block_x_axis = 1;
-				}
-				dim3 b_swap(block_x_axis);
-				//sposto la riga appena trovata nella posizone corretta
-				swap_rows<<<b_swap, t_swap>>>(matrix, row, col, rows_found, r);
-				cudaDeviceSynchronize();
-
-				////////////////////////////////////////////////////////////////////////////////////////
+		int row_linear_index = row_index * col + pivot_col;
+		if (matrix[row_linear_index] != 0) {
+			y = mul_mod_GPU(inv, matrix[row_linear_index], module);
+			for (int k = 0; k < pivot_col + 1; k++) {
+				//a = mul_mod_GPU(s,matrix[pivot_riga*col+k],module);
+				x = mul_mod_GPU(y, smem[k], module);
+				matrix[row_index*col + k] = sub_mod_GPU(matrix[row_index*col + k], x, module);
 			}
-			pivot_row = rows_found;
-			rows_found++;
-
-			inv = invers_GPU(matrix[pivot_row*col + pivot_col], module);
-			////////////////////////////////////////REDUCTION BY BLOCK////////////////////////////////////
-			block_dim = 128;
-			int col_to_reduce = pivot_col;
-			threads_per_block = (col_to_reduce < block_dim ? col_to_reduce : block_dim);
-			dim3 threads(threads_per_block);
-
-			if (threads_per_block == block_dim && col_to_reduce != block_dim) {
-				block_x_axis = (col_to_reduce / block_dim) + 1;
-			}
-			else {
-				block_x_axis = 1;
-			}
-
-			int thread_height = 256;
-			int row_to_reduce = row - rows_found;
-			block_y_axis = (row_to_reduce / thread_height) + 1;
-
-			dim3 blocks(block_x_axis, block_y_axis);
-
-			int shared = (block_dim * sizeof(int)) + (thread_height * sizeof(int));
-			submatrix_reduction_by_block<<<blocks, threads, shared>>>(matrix, row, col, module, pivot_col, inv, pivot_row, thread_height, block_dim);
-			cudaDeviceSynchronize();
-			//////////////////////////////////////////////////////////////////////////////////////////
-
-			///////////////////////////////RESET PIVOT COL////////////////////////////////////////
-			thread_height = 100;
-			block_dim = 32;
-			row_to_reduce = row - pivot_row;
-			threads_per_block = (row_to_reduce < thread_height ? 1 : block_dim);
-			block_x_axis = (threads_per_block == block_dim && row_to_reduce != block_dim) ? (row_to_reduce / (thread_height*block_dim) + 1) : 1;
-			dim3 t(threads_per_block);
-			dim3 b(block_x_axis);
-
-			reset_pivot_col<<<b, t >>>(matrix, row, col, pivot_row, pivot_col, thread_height, block_dim);
-			cudaDeviceSynchronize();
-			//////////////////////////////////////////////////////////////////////////////////////
 		}
 	}
 }
@@ -457,6 +178,156 @@ __global__ void gaussian_reduction_by_row(int *matrix, int row, int col, int mod
 	}
 }
 
+__global__ void submatrix_reduction_by_block(int *matrix, int row, int col, int module, int pivot_col, int inv, int pivot_row, int thread_height, int block_dim) {
+
+	extern __shared__ int smem[];
+
+	int *smem_pivot_row = (int*)smem;
+	int *smem_pivot_col = (int*)&smem_pivot_row[block_dim];
+
+	int x = 0, y = 0, interation = 0;
+	int col_index = blockIdx.x * blockDim.x + threadIdx.x;	//indice della colonna della matrice originale per il thread corrente
+	//-------------
+	//inizzializzazione smem per pivot riga
+	smem_pivot_row[threadIdx.x] = matrix[pivot_row * col + col_index];	//ogni thread copia un solo elemento nella riga in shared, un thread per cella di riga
+	//------------
+	//inizializzazione smem per pivot colonna
+	//calcolo del numero di celle (colonna_pivot) che ogni thred deve copiare
+	
+	int cell_to_copy = 1;
+	if (thread_height > blockDim.x) {
+		cell_to_copy = thread_height / blockDim.x + 1;
+	}
+
+	int base_row = (pivot_row + 1) + blockIdx.y * thread_height;
+	int index = 0;
+	//copia della porzione di colonna in smem
+	for (int i = 0; i<cell_to_copy; i++) {
+		index = (threadIdx.x * cell_to_copy) + i;
+		if (base_row + index < row && index < thread_height) {
+			smem_pivot_col[index] = matrix[(base_row + index) * col + pivot_col];
+		}
+	}
+	//sincronizza tutti i thread del blocco in modo tale che la smem sia consistente
+	__syncthreads();
+
+	if (col_index < pivot_col) {
+		//calcolo del numero di righe sulle quali deve iterare il thread, caso in cui la dimensione della matrice non collima con thread_height
+		int reached_row = (pivot_row + 1) + ((blockIdx.y + 1) * thread_height); //riga raggiunta dal thread corrente
+		if (reached_row > row) {
+			interation = thread_height - (reached_row - row);	//dimensione non collima
+		}
+		else {
+			interation = thread_height;	//caso normale
+		}
+
+		int row_offset = (pivot_row + 1) + (blockIdx.y * thread_height);
+
+		for (int i = 0; i<interation; i++) {
+			int pivot_element = smem_pivot_col[i];
+			if (pivot_element != 0) {
+				y = mul_mod_GPU(inv, pivot_element, module);		//tutti i thread sulla stessa riga calcolano lo stesso risultato
+				x = mul_mod_GPU(y, smem_pivot_row[threadIdx.x], module);
+				matrix[row_offset * col + col_index] = sub_mod_GPU(matrix[row_offset * col + col_index], x, module);
+			}
+			row_offset++;
+		}
+	}
+}
+
+
+__global__ void gaussian_reduction_by_block(int *matrix, int row, int col, int module, int dim) {
+
+	int pivot_row = 0, r = 0, rows_found = 0;
+	int inv;
+	int block_dim = 0;
+	int threads_per_block = 0;
+	int block_x_axis, block_y_axis = 0;
+
+	for (int pivot_col = col - 1; pivot_col >= 0; pivot_col--) {
+		r = rows_found;
+		///////////////////////////FIND PIVOT///////////////////////////////////////////////
+		block_dim = 256;
+		int row_to_check = row - rows_found;
+		threads_per_block = (row_to_check < block_dim ? row_to_check : block_dim);
+		dim3 t_find(threads_per_block);
+
+		if (threads_per_block == block_dim && row_to_check != block_dim) {
+			block_x_axis = (row_to_check / block_dim) + 1;
+		}
+		else {
+			block_x_axis = 1;
+		}
+		dim3 b_find(block_x_axis);
+		next_pivot_row = row;
+		find_pivot << <b_find, t_find >> >(matrix, row, col, r, pivot_col);
+		cudaDeviceSynchronize();
+		r = next_pivot_row;
+		/////////////////////////////////////////////////////////////////////////////////
+		if (r < row) {
+			if (r != rows_found) {
+				////////////////////////SWAP ROWS////////////////////////////////////////////////////////
+				block_dim = 256;
+				threads_per_block = (col < block_dim ? col : block_dim);
+				dim3 t_swap(threads_per_block);
+
+				if (threads_per_block == block_dim && col != block_dim) {
+					block_x_axis = (col / block_dim) + 1;
+				}
+				else {
+					block_x_axis = 1;
+				}
+				dim3 b_swap(block_x_axis);
+				//sposto la riga appena trovata nella posizone corretta
+				swap_rows << <b_swap, t_swap >> >(matrix, row, col, rows_found, r);
+				cudaDeviceSynchronize();
+
+				////////////////////////////////////////////////////////////////////////////////////////
+			}
+			pivot_row = rows_found;
+			rows_found++;
+
+			inv = invers_GPU(matrix[pivot_row*col + pivot_col], module);
+			////////////////////////////////////////REDUCTION BY BLOCK////////////////////////////////////
+			block_dim = 128;
+			int col_to_reduce = pivot_col;
+			threads_per_block = (col_to_reduce < block_dim ? col_to_reduce : block_dim);
+			dim3 threads(threads_per_block);
+
+			if (threads_per_block == block_dim && col_to_reduce != block_dim) {
+				block_x_axis = (col_to_reduce / block_dim) + 1;
+			}
+			else {
+				block_x_axis = 1;
+			}
+
+			int thread_height = 256;
+			int row_to_reduce = row - rows_found;
+			block_y_axis = (row_to_reduce / thread_height) + 1;
+
+			dim3 blocks(block_x_axis, block_y_axis);
+
+			int shared = (block_dim * sizeof(int)) + (thread_height * sizeof(int));
+			submatrix_reduction_by_block << <blocks, threads, shared >> >(matrix, row, col, module, pivot_col, inv, pivot_row, thread_height, block_dim);
+			cudaDeviceSynchronize();
+			//////////////////////////////////////////////////////////////////////////////////////////
+
+			///////////////////////////////RESET PIVOT COL////////////////////////////////////////
+			thread_height = 100;
+			block_dim = 32;
+			row_to_reduce = row - pivot_row;
+			threads_per_block = (row_to_reduce < thread_height ? 1 : block_dim);
+			block_x_axis = (threads_per_block == block_dim && row_to_reduce != block_dim) ? (row_to_reduce / (thread_height*block_dim) + 1) : 1;
+			dim3 t(threads_per_block);
+			dim3 b(block_x_axis);
+
+			reset_pivot_col << <b, t >> >(matrix, row, col, pivot_row, pivot_col, thread_height, block_dim);
+			cudaDeviceSynchronize();
+			//////////////////////////////////////////////////////////////////////////////////////
+		}
+	}
+}
+
 double gauss_CUDA(int *m, int row, int col, int module) {
 
 	int matrix_length = row * col;
@@ -467,9 +338,7 @@ double gauss_CUDA(int *m, int row, int col, int module) {
 
 	gpuErrchk(cudaMalloc((void **)&m_d, matrix_length_bytes));
 	gpuErrchk(cudaMemcpy(m_d, m, matrix_length_bytes, cudaMemcpyHostToDevice));
-
 	start = clock();
-
 	gaussian_reduction_by_block<<<1, 1>>>(m_d, row, col, module, row*col);
 	gpuErrchk(cudaDeviceSynchronize());
 	gpuErrchk(cudaMemcpy(m, m_d, matrix_length_bytes, cudaMemcpyDeviceToHost));
@@ -477,11 +346,8 @@ double gauss_CUDA(int *m, int row, int col, int module) {
 	end = clock();
 	elapsed = ((double)(end - start)) / CLOCKS_PER_SEC;
 	gpuErrchk(cudaFree(m_d));
-
 	return elapsed;
 }
-
-
 
 void execute_standard(int **matrix, int * row, int col, struct map map, int *degree, int **monomi, int numero_variabili, int n_loops, int expansion, FILE *output_file) {
 

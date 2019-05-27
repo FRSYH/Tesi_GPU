@@ -98,6 +98,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <CudaCompile Include="main.cu" />
+    <CudaCompile Include="utility_cuda.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="linalg.cpp" />
@@ -110,6 +111,7 @@
     <ClInclude Include="matrix.h" />
     <ClInclude Include="scan.h" />
     <ClInclude Include="utility.h" />
+    <ClInclude Include="utility_cuda.cuh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
