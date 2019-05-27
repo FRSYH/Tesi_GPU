@@ -64,6 +64,7 @@
       <UseHostInclude>false</UseHostInclude>
       <KeepDir />
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
+      <Include>C:\Users\Martino\OneDrive\Unimi\Magistrale\GPU computing\Tesi_GPU\tesi_gpu\tesi_gpu</Include>
     </CudaCompile>
     <CudaLink>
       <AdditionalLibraryDirectories>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -88,6 +89,7 @@
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
+      <Include>C:\Users\Martino\OneDrive\Unimi\Magistrale\GPU computing\Tesi_GPU\tesi_gpu\tesi_gpu</Include>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -95,9 +97,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="linalg.cpp" />
+    <ClCompile Include="matrix.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="linalg.h" />
+    <ClInclude Include="matrix.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,4 +1,3 @@
-#pragma once
 #ifndef LINALG_H_  /* Include guard */
 #define LINALG_H_
 
@@ -26,9 +25,6 @@ long long factorial(int n);
 void gmp_factorial(mpz_t result, int n);
 */
 
-//mancante nella stdlib, controparte di qsort_r
-void *bsearch_r(const void *key, const void *base, size_t nmemb, size_t size,
-	int(*compar) (const void *, const void *, void *),
-	void *arg);
+
 
 #endif //LINALG_H_
