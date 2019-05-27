@@ -98,10 +98,12 @@
   <ItemGroup>
     <ClCompile Include="linalg.cpp" />
     <ClCompile Include="matrix.cpp" />
+    <ClCompile Include="scan.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="linalg.h" />
     <ClInclude Include="matrix.h" />
+    <ClInclude Include="scan.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
