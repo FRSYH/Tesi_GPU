@@ -127,7 +127,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
 
 
 
-__global__ void kernel_riduzione_blocco(int *matrix, int row, int col, int module, int pivot_col, int inv, int pivot_row, int thread_height, int block_dim) {
+__global__ void submatrix_reduction_by_block(int *matrix, int row, int col, int module, int pivot_col, int inv, int pivot_row, int thread_height, int block_dim) {
 
 	extern __shared__ int smem[];
 
@@ -187,8 +187,7 @@ __global__ void kernel_riduzione_blocco(int *matrix, int row, int col, int modul
 
 
 
-__global__ void kernel_riduzione_riga(int *matrix, int row, int col, int module, int start, int pivot_col, int inv, int pivot_row, int cell_per_thread) {
-
+__global__ void submatrix_reduction_by_row(int *matrix, int row, int col, int module, int start, int pivot_col, int inv, int pivot_row, int cell_per_thread) {
 
 	extern __shared__ int smem[];
 	if ((threadIdx.x * cell_per_thread) <= pivot_col) {
@@ -221,7 +220,7 @@ __global__ void kernel_riduzione_riga(int *matrix, int row, int col, int module,
 }
 
 
-__global__ void kernel_riduzione_cella(int *matrix, int row, int col, int module, int inv, int pivot_col, int pivot_row) {
+__global__ void submatrix_reduction_by_cell(int *matrix, int row, int col, int module, int inv, int pivot_col, int pivot_row) {
 	
 	int starting_row = pivot_row + 1;
 	int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -238,7 +237,7 @@ __global__ void kernel_riduzione_cella(int *matrix, int row, int col, int module
 }
 
 
-__global__ void gauss_kernel_celle(int *matrix, int row, int col, int module) {
+__global__ void gaussian_reduction_by_cell(int *matrix, int row, int col, int module) {
 
 	int pivot_row = 0, r = 0, rows_found = 0;
 	int inv;
@@ -267,7 +266,7 @@ __global__ void gauss_kernel_celle(int *matrix, int row, int col, int module) {
 			int grid_x = col / block_dim + 1;
 			dim3 blocks(grid_x, grid_y, 1);
 
-			kernel_riduzione_cella<<<blocks, threads>>>(matrix, row, col, module, inv, pivot_col, pivot_row);
+			submatrix_reduction_by_cell<<<blocks, threads>>>(matrix, row, col, module, inv, pivot_col, pivot_row);
 			cudaDeviceSynchronize();
 
 			//necessario azzerare tutta la colonna (pivot_colonna)
@@ -321,7 +320,7 @@ __global__ void find_pivot(int *matrix, int row, int col, int r, int pivot_col) 
 
 
 
-__global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, int dim) {
+__global__ void gaussian_reduction_by_block(int *matrix, int row, int col, int module, int dim) {
 
 	int pivot_row = 0, r = 0, rows_found = 0;
 	int inv;
@@ -393,7 +392,7 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, i
 			dim3 blocks(block_x_axis, block_y_axis);
 
 			int shared = (block_dim * sizeof(int)) + (thread_height * sizeof(int));
-			kernel_riduzione_blocco<<<blocks, threads, shared>>>(matrix, row, col, module, pivot_col, inv, pivot_row, thread_height, block_dim);
+			submatrix_reduction_by_block<<<blocks, threads, shared>>>(matrix, row, col, module, pivot_col, inv, pivot_row, thread_height, block_dim);
 			cudaDeviceSynchronize();
 			//////////////////////////////////////////////////////////////////////////////////////////
 
@@ -413,7 +412,7 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module, i
 	}
 }
 
-__global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, int dim) {
+__global__ void gaussian_reduction_by_row(int *matrix, int row, int col, int module, int dim) {
 
 	int pivot_row = 0, r = 0, rows_found = 0;
 	int inv;
@@ -451,14 +450,14 @@ __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module, in
 			int cell_per_thread = (t >= pivot_length) ? 1 : (pivot_length / t) + 1;
 			int shared_mem = pivot_length * sizeof(int);
 
-			kernel_riduzione_riga<<<blocks, threads, shared_mem >>>(matrix, row, col, module, rows_found, pivot_col, inv, pivot_row, cell_per_thread);
+			submatrix_reduction_by_row<<<blocks, threads, shared_mem >>>(matrix, row, col, module, rows_found, pivot_col, inv, pivot_row, cell_per_thread);
 			cudaDeviceSynchronize();
 
 		}
 	}
 }
 
-double gauss_GPU(int *m, int row, int col, int module) {
+double gauss_CUDA(int *m, int row, int col, int module) {
 
 	int matrix_length = row * col;
 	int matrix_length_bytes = matrix_length * sizeof(int);
@@ -471,7 +470,7 @@ double gauss_GPU(int *m, int row, int col, int module) {
 
 	start = clock();
 
-	gauss_kernel_blocco<<<1, 1>>>(m_d, row, col, module, row*col);
+	gaussian_reduction_by_block<<<1, 1>>>(m_d, row, col, module, row*col);
 	gpuErrchk(cudaDeviceSynchronize());
 	gpuErrchk(cudaMemcpy(m, m_d, matrix_length_bytes, cudaMemcpyDeviceToHost));
 
@@ -527,7 +526,7 @@ void execute_standard(int **matrix, int * row, int col, struct map map, int *deg
 		//start = clock();
 
 		//applico la riduzione di Gauss
-		elapsed = gauss_GPU(*matrix, *row, col, module);
+		elapsed = gauss_CUDA(*matrix, *row, col, module);
 		//elimino le righe nulle della matrice
 		eliminate_null_rows(matrix, row, col);
 
@@ -578,18 +577,10 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-
 	if (!input_file)
 		input_file = stdin;
 	if (!output_file)
 		output_file = stdout;
-
-	/*
-	int peak_clk = 1;
-	cudaError_t err = cudaDeviceGetAttribute(&peak_clk, cudaDevAttrClockRate, 0);
-	if (err != cudaSuccess) {printf("cuda err: %d at line %d\n", (int)err, __LINE__); return 1;}
-	printf("peak clock rate: %dkHz", peak_clk);
-	*/
 
 	int row, col, numero_variabili, tipo_ordinamento;
 	int *matrix;
@@ -656,11 +647,6 @@ int main(int argc, char *argv[]) {
 
 	//print_matrix(matrix, row, col, output_file);
 	print_incognite(matrix, row, col, numero_variabili, monomi, output_file);
-	for (int i = 0; i<row*col; i++) {
-		if (matrix[i] > module) {
-			printf("OVERFLOW\n");
-		}
-	}
 
 	free(matrix);
 	free(degree);

@@ -192,8 +192,8 @@ int compare_rows2(const void *rowA, const void *rowB, void *columns) {
 	row2 = *((long long **)rowB);
 
 	for (int i = col - 1; i >= 0; i--) {
-		s1 += (row1[i] * i);
-		s2 += (row2[i] * i);
+		s1 += (int) (row1[i] * i);
+		s2 += (int) (row2[i] * i);
 	}
 
 	return s1 - s2;

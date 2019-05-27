@@ -16,13 +16,13 @@ void allocation(int **matrix, int *row, int *col, int *numero_variabili, char **
 	- variabili utilizzate nei polinomi
 	con queste informazioni alloca la matrice principale (matrice che conterrà i polinomi) e stabilisce il numero di variabili utilizzate.
 	*/
-	fscanf(input_file, "%d", modulo); //leggo il modulo
+	fscanf_s(input_file, "%d", modulo); //leggo il modulo
 	fgetc(input_file);
-	fscanf(input_file, "%d", max_degree); //leggo il grado massimo
+	fscanf_s(input_file, "%d", max_degree); //leggo il grado massimo
 	fgetc(input_file);
-	fscanf(input_file, "%d", row);  //leggo numero dei polinomi di partenza
+	fscanf_s(input_file, "%d", row);  //leggo numero dei polinomi di partenza
 	fgetc(input_file);
-	fscanf(input_file, "%d", tipo_ordinamento);  //leggo tipo di ordinamento
+	fscanf_s(input_file, "%d", tipo_ordinamento);  //leggo tipo di ordinamento
 	fgetc(input_file);
 
 	int i, pos_pol;
@@ -83,7 +83,7 @@ int parse_mon(char * mon, int len, int * val, int num_var, char *vet, int *grade
 		coefficient = (char *) realloc(coefficient, (index + 1) * sizeof(char));
 		coefficient[index] = '\0';
 		//traduco il coefficiente in valore numerico e calcolo il modulo
-		*val = mod(atoll(coefficient), module);
+		*val = (int) mod(atoll(coefficient), module);
 		free(coefficient);
 	}
 
