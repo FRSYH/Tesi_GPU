@@ -1,0 +1,1 @@
+FOR %%G IN (A B C D E F G H I J K L M N O P) DO tesi_gpu --input ../input/input%%G.txt --output ../output/%1/output%%G.txt

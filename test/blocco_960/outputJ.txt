@@ -1,35 +1,35 @@
 
 Inizializzazione in 0.001000 sec
 
-Mappa creata in 0.045000 sec,   969 x 969 
+Mappa creata in 0.036000 sec,   969 x 969 
 
 Inizio computazione, metodo standard
 
- -Eseguo moltiplicazione, numero righe: 743     (0.003000 sec)
- -Eseguo Gauss, numero righe: 703               (0.062000 sec)
+ -Eseguo moltiplicazione, numero righe: 743     (0.001000 sec)
+ -Eseguo Gauss, numero righe: 703               (0.063000 sec)
 Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16 }
 
- -Eseguo moltiplicazione, numero righe: 7777     (0.036000 sec)
+ -Eseguo moltiplicazione, numero righe: 7777     (0.018000 sec)
  -Eseguo Gauss, numero righe: 743               (0.143000 sec)
 Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16 }
 
- -Eseguo moltiplicazione, numero righe: 8577     (0.040000 sec)
- -Eseguo Gauss, numero righe: 839               (0.274000 sec)
+ -Eseguo moltiplicazione, numero righe: 8577     (0.021000 sec)
+ -Eseguo Gauss, numero righe: 839               (0.272000 sec)
 Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16 }
 
- -Eseguo moltiplicazione, numero righe: 10497     (0.051000 sec)
+ -Eseguo moltiplicazione, numero righe: 10497     (0.026000 sec)
  -Eseguo Gauss, numero righe: 917               (0.359000 sec)
 Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16 }
 
- -Eseguo moltiplicazione, numero righe: 12057     (0.054000 sec)
- -Eseguo Gauss, numero righe: 959               (0.394000 sec)
+ -Eseguo moltiplicazione, numero righe: 12057     (0.030000 sec)
+ -Eseguo Gauss, numero righe: 959               (0.393000 sec)
 Gradi della matrice = { 3  4  5  6  7  8  9  10  11  12  13  14  15  16 }
 
- -Eseguo moltiplicazione, numero righe: 7397     (0.035000 sec)
- -Eseguo Gauss, numero righe: 968               (0.286000 sec)
+ -Eseguo moltiplicazione, numero righe: 7397     (0.017000 sec)
+ -Eseguo Gauss, numero righe: 968               (0.287000 sec)
 Gradi della matrice = { 1  2  3  4  5  6  7  8  9  10  11  12  13  14  15  16 }
 
-Target raggiunto, soluzione trovata in 2.085000 sec
+Target raggiunto, soluzione trovata in 1.901000 sec
 
 1653 20445 6353 424 
 

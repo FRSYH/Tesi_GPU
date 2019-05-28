@@ -1,7 +1,7 @@
 
 Inizializzazione in 0.000000 sec
 
-Mappa creata in 0.005000 sec,   286 x 286 
+Mappa creata in 0.003000 sec,   286 x 286 
 
 Inizio computazione, metodo standard
 
@@ -13,19 +13,19 @@ Gradi della matrice = { 4  5  6  7  8  9  10 }
  -Eseguo Gauss, numero righe: 198               (0.019000 sec)
 Gradi della matrice = { 4  5  6  7  8  9  10 }
 
- -Eseguo moltiplicazione, numero righe: 1376     (0.002000 sec)
- -Eseguo Gauss, numero righe: 234               (0.035000 sec)
+ -Eseguo moltiplicazione, numero righe: 1376     (0.001000 sec)
+ -Eseguo Gauss, numero righe: 234               (0.034000 sec)
 Gradi della matrice = { 4  5  6  7  8  9  10 }
 
- -Eseguo moltiplicazione, numero righe: 2096     (0.004000 sec)
- -Eseguo Gauss, numero righe: 276               (0.075000 sec)
+ -Eseguo moltiplicazione, numero righe: 2096     (0.002000 sec)
+ -Eseguo Gauss, numero righe: 276               (0.074000 sec)
 Gradi della matrice = { 3  4  5  6  7  8  9  10 }
 
  -Eseguo moltiplicazione, numero righe: 1836     (0.002000 sec)
  -Eseguo Gauss, numero righe: 285               (0.066000 sec)
 Gradi della matrice = { 1  2  3  4  5  6  7  8  9  10 }
 
-Target raggiunto, soluzione trovata in 0.408000 sec
+Target raggiunto, soluzione trovata in 0.396000 sec
 
 835 3524 4208 3951 
 

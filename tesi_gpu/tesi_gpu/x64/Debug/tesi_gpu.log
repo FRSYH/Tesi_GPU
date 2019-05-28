@@ -4,14 +4,15 @@
   C:\Users\Martino\OneDrive\Unimi\Magistrale\GPU computing\Tesi_GPU\tesi_gpu\tesi_gpu>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\bin\nvcc.exe" -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.13.26128\bin\HostX86\x64" -x cu  -I"C:\Users\Martino\OneDrive\Unimi\Magistrale\GPU computing\Tesi_GPU\tesi_gpu\tesi_gpu" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include"      -maxrregcount=0  --machine 64 --compile       -Xcompiler "/EHsc /W3 /nologo /Od  /FS /Zi /RTC1 /MDd " -o x64\Debug\utility_cuda.cu.obj "C:\Users\Martino\OneDrive\Unimi\Magistrale\GPU computing\Tesi_GPU\tesi_gpu\tesi_gpu\utility_cuda.cu" -clean 
   main.cu
   utility_cuda.cu
-  Compiling CUDA source file main.cu...
   Compiling CUDA source file utility_cuda.cu...
+  Compiling CUDA source file main.cu...
   
   C:\Users\Martino\OneDrive\Unimi\Magistrale\GPU computing\Tesi_GPU\tesi_gpu\tesi_gpu>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.13.26128\bin\HostX86\x64" -x cu -rdc=true -I"C:\Users\Martino\OneDrive\Unimi\Magistrale\GPU computing\Tesi_GPU\tesi_gpu\tesi_gpu" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include"      -maxrregcount=0  --machine 64 --compile -cudart static      -Xcompiler "/EHsc /W3 /nologo /Od /Fdx64\Debug\vc141.pdb /FS /Zi /RTC1 /MDd " -o x64\Debug\utility_cuda.cu.obj "C:\Users\Martino\OneDrive\Unimi\Magistrale\GPU computing\Tesi_GPU\tesi_gpu\tesi_gpu\utility_cuda.cu" 
   
   C:\Users\Martino\OneDrive\Unimi\Magistrale\GPU computing\Tesi_GPU\tesi_gpu\tesi_gpu>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.13.26128\bin\HostX86\x64" -x cu -rdc=true -I"C:\Users\Martino\OneDrive\Unimi\Magistrale\GPU computing\Tesi_GPU\tesi_gpu\tesi_gpu" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include"      -maxrregcount=0  --machine 64 --compile -cudart static      -Xcompiler "/EHsc /W3 /nologo /Od /Fdx64\Debug\vc141.pdb /FS /Zi /RTC1 /MDd " -o x64\Debug\main.cu.obj "C:\Users\Martino\OneDrive\Unimi\Magistrale\GPU computing\Tesi_GPU\tesi_gpu\tesi_gpu\main.cu" 
   utility_cuda.cu
   main.cu
+  cl : warning della riga di comando D9002 : l'opzione sconosciuta '-O3' verrà ignorata
   linalg.cpp
   matrix.cpp
   scan.cpp
