@@ -1,0 +1,36 @@
+
+Inizializzazione in 0.000000 sec
+
+Mappa creata in 0.017000 sec,   680 x 680 
+
+Inizio computazione, metodo standard
+
+ -Eseguo moltiplicazione, numero righe: 518     (0.001000 sec)
+ -Eseguo Gauss, numero righe: 490               (0.191000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14 }
+
+ -Eseguo moltiplicazione, numero righe: 4930     (0.008000 sec)
+ -Eseguo Gauss, numero righe: 528               (0.388000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14 }
+
+ -Eseguo moltiplicazione, numero righe: 5690     (0.010000 sec)
+ -Eseguo Gauss, numero righe: 606               (0.401000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14 }
+
+ -Eseguo moltiplicazione, numero righe: 7250     (0.014000 sec)
+ -Eseguo Gauss, numero righe: 660               (0.368000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14 }
+
+ -Eseguo moltiplicazione, numero righe: 8330     (0.014000 sec)
+ -Eseguo Gauss, numero righe: 679               (0.301000 sec)
+Gradi della matrice = { 1  2  3  4  5  6  7  8  9  10  11  12  13  14 }
+
+Target raggiunto, soluzione trovata in 1.918000 sec
+
+5478 6999 6939 3888 
+
+11371 1794 7467 
+
+5446 5031 
+
+

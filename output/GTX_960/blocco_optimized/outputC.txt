@@ -1,0 +1,32 @@
+
+Inizializzazione in 0.001000 sec
+
+Mappa creata in 0.003000 sec,   286 x 286 
+
+Inizio computazione, metodo standard
+
+ -Eseguo moltiplicazione, numero righe: 210     (0.000000 sec)
+ -Eseguo Gauss, numero righe: 204               (0.017000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10 }
+
+ -Eseguo moltiplicazione, numero righe: 1496     (0.001000 sec)
+ -Eseguo Gauss, numero righe: 235               (0.031000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10 }
+
+ -Eseguo moltiplicazione, numero righe: 2116     (0.002000 sec)
+ -Eseguo Gauss, numero righe: 276               (0.070000 sec)
+Gradi della matrice = { 3  4  5  6  7  8  9  10 }
+
+ -Eseguo moltiplicazione, numero righe: 1836     (0.001000 sec)
+ -Eseguo Gauss, numero righe: 285               (0.062000 sec)
+Gradi della matrice = { 1  2  3  4  5  6  7  8  9  10 }
+
+Target raggiunto, soluzione trovata in 0.361000 sec
+
+3198 2913 1776 1116 
+
+2191 208 2427 
+
+541 2302 
+
+

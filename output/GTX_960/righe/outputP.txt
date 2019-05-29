@@ -1,0 +1,60 @@
+
+Inizializzazione in 0.004000 sec
+
+Mappa creata in 0.868000 sec,   4960 x 4960 
+
+Inizio computazione, metodo standard
+
+ -Eseguo moltiplicazione, numero righe: 4212     (0.045000 sec)
+ -Eseguo Gauss, numero righe: 3924               (9.902000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29 }
+
+ -Eseguo moltiplicazione, numero righe: 58745     (0.748000 sec)
+ -Eseguo Gauss, numero righe: 3936               (33.740000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29 }
+
+ -Eseguo moltiplicazione, numero righe: 58865     (0.722000 sec)
+ -Eseguo Gauss, numero righe: 3984               (36.821000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29 }
+
+ -Eseguo moltiplicazione, numero righe: 59825     (0.743000 sec)
+ -Eseguo Gauss, numero righe: 4116               (43.981000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29 }
+
+ -Eseguo moltiplicazione, numero righe: 62465     (0.779000 sec)
+ -Eseguo Gauss, numero righe: 4311               (51.966000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29 }
+
+ -Eseguo moltiplicazione, numero righe: 66365     (0.823000 sec)
+ -Eseguo Gauss, numero righe: 4508               (60.271000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29 }
+
+ -Eseguo moltiplicazione, numero righe: 70305     (0.873000 sec)
+ -Eseguo Gauss, numero righe: 4670               (63.477000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29 }
+
+ -Eseguo moltiplicazione, numero righe: 73545     (0.907000 sec)
+ -Eseguo Gauss, numero righe: 4796               (61.613000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29 }
+
+ -Eseguo moltiplicazione, numero righe: 76065     (0.929000 sec)
+ -Eseguo Gauss, numero righe: 4886               (59.054000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29 }
+
+ -Eseguo moltiplicazione, numero righe: 77865     (0.952000 sec)
+ -Eseguo Gauss, numero righe: 4940               (56.614000 sec)
+Gradi della matrice = { 4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29 }
+
+ -Eseguo moltiplicazione, numero righe: 78945     (0.958000 sec)
+ -Eseguo Gauss, numero righe: 4959               (55.139000 sec)
+Gradi della matrice = { 1  2  3  4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29 }
+
+Target raggiunto, soluzione trovata in 548.023000 sec
+
+161339 63290 148481 89831 
+
+129862 14423 50666 
+
+13287 136018 
+
+

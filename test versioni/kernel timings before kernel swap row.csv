@@ -1,5 +1,0 @@
-Name,Invocations,Avg. Duration(ns),Registers/Thread,Static Shared Memory,Avg. Dynamic Shared Memory
-"reset_pivot_col(int*, int, int, int, int, int, int)",154,21244,32,0,256
-"kernel_riduzione_blocco(int*, int, int, int, int, int, int, int, int)",155,187715,36,0,1536
-"kernel_swap_rows(int*, int, int, int, int)",134,288080,21,0,256
-"gauss_kernel_blocco(int*, int, int, int, int)",1,2761113635,32,0,0
