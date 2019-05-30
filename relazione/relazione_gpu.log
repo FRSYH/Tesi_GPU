@@ -1,12 +1,13 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6745 64-bit) (preloaded format=pdflatex 2018.8.21)  30 MAY 2019 10:44
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (MiKTeX 2.9.6960 64-bit) (preloaded format=pdflatex 2019.3.8)  30 MAY 2019 21:28
 entering extended mode
 **./relazione_gpu.tex
 (relazione_gpu.tex
-LaTeX2e <2018-04-01> patch level 5
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\base\article.cls"
-Document Class: article 2014/09/29 v1.4h Standard LaTeX document class
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\base\size10.clo"
-File: size10.clo 2014/09/29 v1.4h Standard LaTeX file (size option)
+LaTeX2e <2018-12-01>
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/base\article.cls
+"
+Document Class: article 2018/09/03 v1.4i Standard LaTeX document class
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/base\size10.clo"
+File: size10.clo 2018/09/03 v1.4i Standard LaTeX file (size option)
 )
 \c@part=\count80
 \c@section=\count81
@@ -19,48 +20,50 @@ File: size10.clo 2014/09/29 v1.4h Standard LaTeX file (size option)
 \abovecaptionskip=\skip41
 \belowcaptionskip=\skip42
 \bibindent=\dimen102
-) ("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\base\inputenc.st
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/base\inputenc.st
 y"
-Package: inputenc 2018/04/06 v1.3b Input encoding file
+Package: inputenc 2018/08/11 v1.3c Input encoding file
 \inpenc@prehook=\toks14
 \inpenc@posthook=\toks15
 )
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\graphics\graphicx.
-sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/graphics\graphic
+x.sty"
 Package: graphicx 2017/06/01 v1.1a Enhanced LaTeX Graphics (DPC,SPQR)
 
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\graphics\keyval.st
-y"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/graphics\keyval.
+sty"
 Package: keyval 2014/10/28 v1.15 key=value parser (DPC)
 \KV@toks@=\toks16
 )
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\graphics\graphics.
-sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/graphics\graphic
+s.sty"
 Package: graphics 2017/06/25 v1.2c Standard LaTeX Graphics (DPC,SPQR)
 
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\graphics\trig.sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/graphics\trig.st
+y"
 Package: trig 2016/01/03 v1.10 sin cos tan (DPC)
 )
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\graphics-cfg\graph
-ics.cfg"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/graphics-cfg\gra
+phics.cfg"
 File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
 )
 Package graphics Info: Driver file: pdftex.def on input line 99.
 
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\graphics-def\pdfte
-x.def"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/graphics-def\pdf
+tex.def"
 File: pdftex.def 2018/01/08 v1.0l Graphics/color driver for pdftex
 ))
 \Gin@req@height=\dimen103
 \Gin@req@width=\dimen104
 )
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\caption\caption.st
-y"
-Package: caption 2018/05/01 v3.3-147 Customizing captions (AR)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/caption\caption.
+sty"
+Package: caption 2018/10/06 v3.3-154 Customizing captions (AR)
 
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\caption\caption3.s
-ty"
-Package: caption3 2018/05/27 v1.8a caption3 kernel (AR)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/caption\caption3
+.sty"
+Package: caption3 2018/09/12 v1.8c caption3 kernel (AR)
 Package caption3 Info: TeX engine: e-TeX on input line 64.
 \captionmargin=\dimen105
 \captionmargin@=\dimen106
@@ -70,62 +73,287 @@ Package caption3 Info: TeX engine: e-TeX on input line 64.
 \caption@parindent=\dimen110
 \caption@hangindent=\dimen111
 )
-\c@ContinuedFloat=\count88
+\c@caption@flags=\count88
+\c@ContinuedFloat=\count89
 )
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\minted\minted.sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/minted\minted.st
+y"
 Package: minted 2017/07/19 v2.5 Yet another Pygments shim for LaTeX
 
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\oberdiek\kvoptions
-.sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/oberdiek\kvoptio
+ns.sty"
 Package: kvoptions 2016/05/16 v3.12 Key value format for package options (HO)
 
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\generic\oberdiek\ltxcmds
-.sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/oberdiek\ltxcm
+ds.sty"
 Package: ltxcmds 2016/05/16 v1.23 LaTeX kernel commands for general use (HO)
 )
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\generic\oberdiek\kvsetke
-ys.sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/oberdiek\kvset
+keys.sty"
 Package: kvsetkeys 2016/05/16 v1.17 Key value parser (HO)
 
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\generic\oberdiek\infware
-rr.sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/oberdiek\infwa
+rerr.sty"
 Package: infwarerr 2016/05/16 v1.4 Providing info/warning/error messages (HO)
 )
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\generic\oberdiek\etexcmd
-s.sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/oberdiek\etexc
+mds.sty"
 Package: etexcmds 2016/05/16 v1.6 Avoid name clashes with e-TeX commands (HO)
 
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\generic\oberdiek\ifluate
-x.sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/oberdiek\iflua
+tex.sty"
 Package: ifluatex 2016/05/16 v1.4 Provides the ifluatex switch (HO)
 Package ifluatex Info: LuaTeX not detected.
-)
-Package etexcmds Info: Could not find \expanded.
-(etexcmds)             That can mean that you are not using pdfTeX 1.50 or
-(etexcmds)             that some package has redefined \expanded.
-(etexcmds)             In the latter case, load this package earlier.
-)))
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\fvextra\fvextra.st
-y"
-Package: fvextra 2017/07/08 v1.3.1 fvextra - extensions and patches for fancyvr
-b
- ("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\base\ifthen.sty"
+))))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/fvextra\fvextra.
+sty"
+Package: fvextra 2019/02/04 v1.4 fvextra - extensions and patches for fancyvrb
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/base\ifthen.sty"
 Package: ifthen 2014/09/29 v1.1c Standard LaTeX ifthen package (DPC)
 )
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\etoolbox\etoolbox.
-sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/etoolbox\etoolbo
+x.sty"
 Package: etoolbox 2018/08/19 v2.5f e-TeX tools for LaTeX (JAW)
-\etb@tempcnta=\count89
+\etb@tempcnta=\count90
 )
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\fancyvrb\fancyvrb.
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/fancyvrb\fancyvr
+b.sty"
+Package: fancyvrb 2019/01/15
+ Style option: `fancyvrb' v3.2a <2019/01/15> (tvz)
+\FV@CodeLineNo=\count91
+\FV@InFile=\read1
+\FV@TabBox=\box27
+\c@FancyVerbLine=\count92
+\FV@StepNumber=\count93
+\FV@OutFile=\write3
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/upquote\upquote.
 sty"
-Package: fancyvrb 2018/11/20
- Style option: `fancyvrb' v3.1a <2018/11/20> (tvz)
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\xcolor\xcolor.sty"
+Package: upquote 2012/04/19 v1.3 upright-quote and grave-accent glyphs in verba
+tim
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/lineno\lineno.st
+y"
+Package: lineno 2005/11/02 line numbers on paragraphs v4.41
+\linenopenalty=\count94
+\output=\toks17
+\linenoprevgraf=\count95
+\linenumbersep=\dimen112
+\linenumberwidth=\dimen113
+\c@linenumber=\count96
+\c@pagewiselinenumber=\count97
+\c@LN@truepage=\count98
+\c@internallinenumber=\count99
+\c@internallinenumbers=\count100
+\quotelinenumbersep=\dimen114
+\bframerule=\dimen115
+\bframesep=\dimen116
+\bframebox=\box28
+LaTeX Info: Redefining \\ on input line 3056.
+)
+\c@FV@TrueTabGroupLevel=\count101
+\c@FV@TrueTabCounter=\count102
+\FV@TabBox@Group=\box29
+\FV@TmpLength=\skip43
+\c@FV@HighlightLinesStart=\count103
+\c@FV@HighlightLinesStop=\count104
+\FV@LoopCount=\count105
+\FV@NCharsBox=\box30
+\FV@BreakIndent=\dimen117
+\FV@BreakIndentNChars=\count106
+\FV@BreakSymbolSepLeft=\dimen118
+\FV@BreakSymbolSepLeftNChars=\count107
+\FV@BreakSymbolSepRight=\dimen119
+\FV@BreakSymbolSepRightNChars=\count108
+\FV@BreakSymbolIndentLeft=\dimen120
+\FV@BreakSymbolIndentLeftNChars=\count109
+\FV@BreakSymbolIndentRight=\dimen121
+\FV@BreakSymbolIndentRightNChars=\count110
+\c@FancyVerbLineBreakLast=\count111
+\FV@LineBox=\box31
+\FV@LineIndentBox=\box32
+\FV@LineWidth=\dimen122
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/tools\calc.sty"
+Package: calc 2017/05/25 v4.3 Infix arithmetic (KKT,FJ)
+\calc@Acount=\count112
+\calc@Bcount=\count113
+\calc@Adimen=\dimen123
+\calc@Bdimen=\dimen124
+\calc@Askip=\skip44
+\calc@Bskip=\skip45
+LaTeX Info: Redefining \setlength on input line 80.
+LaTeX Info: Redefining \addtolength on input line 81.
+\calc@Ccount=\count114
+\calc@Cskip=\skip46
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/tools\shellesc.s
+ty"
+Package: shellesc 2016/06/07 v0.02a unified shell escape interface for LaTeX
+Package shellesc Info: Unrestricted shell escape enabled on input line 67.
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/ifplatform\ifpla
+tform.sty"
+Package: ifplatform 2017/10/13 v0.4a Testing for the operating system
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/oberdiek\pdfte
+xcmds.sty"
+Package: pdftexcmds 2018/09/10 v0.29 Utility functions of pdfTeX for LuaTeX (HO
+)
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/oberdiek\ifpdf
+.sty"
+Package: ifpdf 2018/09/07 v3.3 Provides the ifpdf switch
+)
+Package pdftexcmds Info: LuaTeX not detected.
+Package pdftexcmds Info: \pdf@primitive is available.
+Package pdftexcmds Info: \pdf@ifprimitive is available.
+Package pdftexcmds Info: \pdfdraftmode found.
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/oberdiek\catch
+file.sty"
+Package: catchfile 2016/05/16 v1.7 Catch the contents of a file (HO)
+))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/xstring\xstring.
+sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/xstring\xstrin
+g.tex"
+\integerpart=\count115
+\decimalpart=\count116
+)
+Package: xstring 2019/02/06 v1.83 String manipulations (CT)
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/framed\framed.st
+y"
+Package: framed 2011/10/22 v 0.96: framed or shaded text with page breaks
+\OuterFrameSep=\skip47
+\fb@frw=\dimen125
+\fb@frh=\dimen126
+\FrameRule=\dimen127
+\FrameSep=\dimen128
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/float\float.sty"
+Package: float 2001/11/08 v1.3d Float enhancements (AL)
+\c@float@type=\count117
+\float@exts=\toks18
+\float@box=\box33
+\@float@everytoks=\toks19
+\@floatcapt=\box34
+)
+\minted@appexistsfile=\read2
+\minted@bgbox=\box35
+\minted@code=\write4
+\c@minted@FancyVerbLineTemp=\count118
+\c@minted@pygmentizecounter=\count119
+\@float@every@listing=\toks20
+\c@listing=\count120
+)
+runsystem(if not exist _minted-relazione_gpu mkdir _minted-relazione_gpu)...exe
+cuted.
+
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/pgfplots\pgfplot
+s.sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots\pgfpl
+ots.revision.tex")
+Package: pgfplots 2018/03/28 v1.16 Data Visualization (1.16)
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/pgf/frontendlaye
+r\tikz.sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/pgf/basiclayer\p
+gf.sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/pgf/utilities\pg
+frcs.sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/utilities\
+pgfutil-common.tex"
+\pgfutil@everybye=\toks21
+\pgfutil@tempdima=\dimen129
+\pgfutil@tempdimb=\dimen130
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/utilities\
+pgfutil-common-lists.tex"))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/utilities\
+pgfutil-latex.def"
+\pgfutil@abb=\box36
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/ms\everyshi.sty"
+Package: everyshi 2001/05/15 v3.00 EveryShipout Package (MS)
+))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/utilities\
+pgfrcs.code.tex"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf\pgf.revisi
+on.tex")
+Package: pgfrcs 2019/02/02 v3.1.1 (3.1.1)
+))
+Package: pgf 2019/02/02 v3.1.1 (3.1.1)
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/pgf/basiclayer\p
+gfcore.sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/pgf/systemlayer\
+pgfsys.sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/systemlaye
+r\pgfsys.code.tex"
+Package: pgfsys 2019/02/02 v3.1.1 (3.1.1)
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/utilities\
+pgfkeys.code.tex"
+\pgfkeys@pathtoks=\toks22
+\pgfkeys@temptoks=\toks23
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/utilities\
+pgfkeysfiltered.code.tex"
+\pgfkeys@tmptoks=\toks24
+))
+\pgf@x=\dimen131
+\pgf@y=\dimen132
+\pgf@xa=\dimen133
+\pgf@ya=\dimen134
+\pgf@xb=\dimen135
+\pgf@yb=\dimen136
+\pgf@xc=\dimen137
+\pgf@yc=\dimen138
+\w@pgf@writea=\write5
+\r@pgf@reada=\read3
+\c@pgf@counta=\count121
+\c@pgf@countb=\count122
+\c@pgf@countc=\count123
+\c@pgf@countd=\count124
+\t@pgf@toka=\toks25
+\t@pgf@tokb=\toks26
+\t@pgf@tokc=\toks27
+\pgf@sys@id@count=\count125
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/systemlaye
+r\pgf.cfg"
+File: pgf.cfg 2019/02/02 v3.1.1 (3.1.1)
+)
+Driver file for pgf: pgfsys-pdftex.def
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/systemlaye
+r\pgfsys-pdftex.def"
+File: pgfsys-pdftex.def 2019/02/02 v3.1.1 (3.1.1)
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/systemlaye
+r\pgfsys-common-pdf.def"
+File: pgfsys-common-pdf.def 2019/02/02 v3.1.1 (3.1.1)
+)))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/systemlaye
+r\pgfsyssoftpath.code.tex"
+File: pgfsyssoftpath.code.tex 2019/02/02 v3.1.1 (3.1.1)
+\pgfsyssoftpath@smallbuffer@items=\count126
+\pgfsyssoftpath@bigbuffer@items=\count127
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/systemlaye
+r\pgfsysprotocol.code.tex"
+File: pgfsysprotocol.code.tex 2019/02/02 v3.1.1 (3.1.1)
+))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/xcolor\xcolor.st
+y"
 Package: xcolor 2016/05/11 v2.12 LaTeX color extensions (UK)
 
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\graphics-cfg\color
-.cfg"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/graphics-cfg\col
+or.cfg"
 File: color.cfg 2016/01/02 v1.6 sample color configuration
 )
 Package xcolor Info: Driver file: pdftex.def on input line 225.
@@ -139,132 +367,344 @@ Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1369.
 Package xcolor Info: Model `Gray' substituted by `gray' on input line 1370.
 Package xcolor Info: Model `wave' substituted by `hsb' on input line 1371.
 )
-\FV@CodeLineNo=\count90
-\FV@InFile=\read1
-\FV@TabBox=\box26
-\c@FancyVerbLine=\count91
-\FV@StepNumber=\count92
-\FV@OutFile=\write3
-)
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\upquote\upquote.st
-y"
-Package: upquote 2012/04/19 v1.3 upright-quote and grave-accent glyphs in verba
-tim
-)
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\lineno\lineno.sty"
-Package: lineno 2005/11/02 line numbers on paragraphs v4.41
-\linenopenalty=\count93
-\output=\toks17
-\linenoprevgraf=\count94
-\linenumbersep=\dimen112
-\linenumberwidth=\dimen113
-\c@linenumber=\count95
-\c@pagewiselinenumber=\count96
-\c@LN@truepage=\count97
-\c@internallinenumber=\count98
-\c@internallinenumbers=\count99
-\quotelinenumbersep=\dimen114
-\bframerule=\dimen115
-\bframesep=\dimen116
-\bframebox=\box27
-LaTeX Info: Redefining \\ on input line 3056.
-)
-\c@FV@TrueTabGroupLevel=\count100
-\c@FV@TrueTabCounter=\count101
-\FV@TabBox@Group=\box28
-\FV@TmpLength=\skip43
-\c@FV@HighlightLinesStart=\count102
-\c@FV@HighlightLinesStop=\count103
-\FV@LoopCount=\count104
-\FV@NCharsBox=\box29
-\FV@BreakIndent=\dimen117
-\FV@BreakIndentNChars=\count105
-\FV@BreakSymbolSepLeft=\dimen118
-\FV@BreakSymbolSepLeftNChars=\count106
-\FV@BreakSymbolSepRight=\dimen119
-\FV@BreakSymbolSepRightNChars=\count107
-\FV@BreakSymbolIndentLeft=\dimen120
-\FV@BreakSymbolIndentLeftNChars=\count108
-\FV@BreakSymbolIndentRight=\dimen121
-\FV@BreakSymbolIndentRightNChars=\count109
-\c@FancyVerbLineBreakLast=\count110
-\FV@LineBox=\box30
-\FV@LineIndentBox=\box31
-) ("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\tools\calc.sty"
-Package: calc 2017/05/25 v4.3 Infix arithmetic (KKT,FJ)
-\calc@Acount=\count111
-\calc@Bcount=\count112
-\calc@Adimen=\dimen122
-\calc@Bdimen=\dimen123
-\calc@Askip=\skip44
-\calc@Bskip=\skip45
-LaTeX Info: Redefining \setlength on input line 80.
-LaTeX Info: Redefining \addtolength on input line 81.
-\calc@Ccount=\count113
-\calc@Cskip=\skip46
-)
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\tools\shellesc.sty
-"
-Package: shellesc 2016/06/07 v0.02a unified shell escape interface for LaTeX
-Package shellesc Info: Unrestricted shell escape enabled on input line 67.
-)
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\ifplatform\ifplatf
-orm.sty"
-Package: ifplatform 2017/10/13 v0.4a Testing for the operating system
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/basiclayer
+\pgfcore.code.tex"
+Package: pgfcore 2019/02/02 v3.1.1 (3.1.1)
 
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\generic\oberdiek\pdftexc
-mds.sty"
-Package: pdftexcmds 2018/01/30 v0.27 Utility functions of pdfTeX for LuaTeX (HO
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/math\pgfma
+th.code.tex"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/math\pgfma
+thcalc.code.tex"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/math\pgfma
+thutil.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/math\pgfma
+thparser.code.tex"
+\pgfmath@dimen=\dimen139
+\pgfmath@count=\count128
+\pgfmath@box=\box37
+\pgfmath@toks=\toks28
+\pgfmath@stack@operand=\toks29
+\pgfmath@stack@operation=\toks30
 )
-
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\generic\oberdiek\ifpdf.s
-ty"
-Package: ifpdf 2017/03/15 v3.2 Provides the ifpdf switch
-)
-Package pdftexcmds Info: LuaTeX not detected.
-Package pdftexcmds Info: \pdf@primitive is available.
-Package pdftexcmds Info: \pdf@ifprimitive is available.
-Package pdftexcmds Info: \pdfdraftmode found.
-)
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\generic\oberdiek\catchfi
-le.sty"
-Package: catchfile 2016/05/16 v1.7 Catch the contents of a file (HO)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/math\pgfma
+thfunctions.code.tex"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/math\pgfma
+thfunctions.basic.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/math\pgfma
+thfunctions.trigonometric.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/math\pgfma
+thfunctions.random.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/math\pgfma
+thfunctions.comparison.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/math\pgfma
+thfunctions.base.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/math\pgfma
+thfunctions.round.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/math\pgfma
+thfunctions.misc.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/math\pgfma
+thfunctions.integerarithmetics.code.tex")))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/math\pgfma
+thfloat.code.tex"
+\c@pgfmathroundto@lastzeros=\count129
 ))
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\xstring\xstring.st
-y"
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\generic\xstring\xstring.
-tex"
-\integerpart=\count114
-\decimalpart=\count115
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/basiclayer
+\pgfcorepoints.code.tex"
+File: pgfcorepoints.code.tex 2019/02/02 v3.1.1 (3.1.1)
+\pgf@picminx=\dimen140
+\pgf@picmaxx=\dimen141
+\pgf@picminy=\dimen142
+\pgf@picmaxy=\dimen143
+\pgf@pathminx=\dimen144
+\pgf@pathmaxx=\dimen145
+\pgf@pathminy=\dimen146
+\pgf@pathmaxy=\dimen147
+\pgf@xx=\dimen148
+\pgf@xy=\dimen149
+\pgf@yx=\dimen150
+\pgf@yy=\dimen151
+\pgf@zx=\dimen152
+\pgf@zy=\dimen153
 )
-Package: xstring 2018/12/09 v1.81 String manipulations (CT)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/basiclayer
+\pgfcorepathconstruct.code.tex"
+File: pgfcorepathconstruct.code.tex 2019/02/02 v3.1.1 (3.1.1)
+\pgf@path@lastx=\dimen154
+\pgf@path@lasty=\dimen155
 )
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\framed\framed.sty"
-Package: framed 2011/10/22 v 0.96: framed or shaded text with page breaks
-\OuterFrameSep=\skip47
-\fb@frw=\dimen124
-\fb@frh=\dimen125
-\FrameRule=\dimen126
-\FrameSep=\dimen127
-) ("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\float\float.sty"
-Package: float 2001/11/08 v1.3d Float enhancements (AL)
-\c@float@type=\count116
-\float@exts=\toks18
-\float@box=\box32
-\@float@everytoks=\toks19
-\@floatcapt=\box33
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/basiclayer
+\pgfcorepathusage.code.tex"
+File: pgfcorepathusage.code.tex 2019/02/02 v3.1.1 (3.1.1)
+\pgf@shorten@end@additional=\dimen156
+\pgf@shorten@start@additional=\dimen157
 )
-\minted@appexistsfile=\read2
-\minted@bgbox=\box34
-\minted@code=\write4
-\c@minted@FancyVerbLineTemp=\count117
-\c@minted@pygmentizecounter=\count118
-\@float@every@listing=\toks20
-\c@listing=\count119
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/basiclayer
+\pgfcorescopes.code.tex"
+File: pgfcorescopes.code.tex 2019/02/02 v3.1.1 (3.1.1)
+\pgfpic=\box38
+\pgf@hbox=\box39
+\pgf@layerbox@main=\box40
+\pgf@picture@serial@count=\count130
 )
-runsystem(if not exist _minted-relazione_gpu mkdir _minted-relazione_gpu)...exe
-cuted.
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/basiclayer
+\pgfcoregraphicstate.code.tex"
+File: pgfcoregraphicstate.code.tex 2019/02/02 v3.1.1 (3.1.1)
+\pgflinewidth=\dimen158
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/basiclayer
+\pgfcoretransformations.code.tex"
+File: pgfcoretransformations.code.tex 2019/02/02 v3.1.1 (3.1.1)
+\pgf@pt@x=\dimen159
+\pgf@pt@y=\dimen160
+\pgf@pt@temp=\dimen161
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/basiclayer
+\pgfcorequick.code.tex"
+File: pgfcorequick.code.tex 2019/02/02 v3.1.1 (3.1.1)
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/basiclayer
+\pgfcoreobjects.code.tex"
+File: pgfcoreobjects.code.tex 2019/02/02 v3.1.1 (3.1.1)
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/basiclayer
+\pgfcorepathprocessing.code.tex"
+File: pgfcorepathprocessing.code.tex 2019/02/02 v3.1.1 (3.1.1)
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/basiclayer
+\pgfcorearrows.code.tex"
+File: pgfcorearrows.code.tex 2019/02/02 v3.1.1 (3.1.1)
+\pgfarrowsep=\dimen162
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/basiclayer
+\pgfcoreshade.code.tex"
+File: pgfcoreshade.code.tex 2019/02/02 v3.1.1 (3.1.1)
+\pgf@max=\dimen163
+\pgf@sys@shading@range@num=\count131
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/basiclayer
+\pgfcoreimage.code.tex"
+File: pgfcoreimage.code.tex 2019/02/02 v3.1.1 (3.1.1)
 
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/basiclayer
+\pgfcoreexternal.code.tex"
+File: pgfcoreexternal.code.tex 2019/02/02 v3.1.1 (3.1.1)
+\pgfexternal@startupbox=\box41
+))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/basiclayer
+\pgfcorelayers.code.tex"
+File: pgfcorelayers.code.tex 2019/02/02 v3.1.1 (3.1.1)
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/basiclayer
+\pgfcoretransparency.code.tex"
+File: pgfcoretransparency.code.tex 2019/02/02 v3.1.1 (3.1.1)
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/basiclayer
+\pgfcorepatterns.code.tex"
+File: pgfcorepatterns.code.tex 2019/02/02 v3.1.1 (3.1.1)
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/basiclayer
+\pgfcorerdf.code.tex"
+File: pgfcorerdf.code.tex 2019/02/02 v3.1.1 (3.1.1)
+)))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/modules\pg
+fmoduleshapes.code.tex"
+File: pgfmoduleshapes.code.tex 2019/02/02 v3.1.1 (3.1.1)
+\pgfnodeparttextbox=\box42
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/modules\pg
+fmoduleplot.code.tex"
+File: pgfmoduleplot.code.tex 2019/02/02 v3.1.1 (3.1.1)
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/pgf/compatibilit
+y\pgfcomp-version-0-65.sty"
+Package: pgfcomp-version-0-65 2019/02/02 v3.1.1 (3.1.1)
+\pgf@nodesepstart=\dimen164
+\pgf@nodesepend=\dimen165
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/pgf/compatibilit
+y\pgfcomp-version-1-18.sty"
+Package: pgfcomp-version-1-18 2019/02/02 v3.1.1 (3.1.1)
+))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/pgf/utilities\pg
+ffor.sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/pgf/utilities\pg
+fkeys.sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/utilities\
+pgfkeys.code.tex"))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/pgf/math\pgfmath
+.sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/math\pgfma
+th.code.tex"))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/utilities\
+pgffor.code.tex"
+Package: pgffor 2019/02/02 v3.1.1 (3.1.1)
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/math\pgfma
+th.code.tex")
+\pgffor@iter=\dimen166
+\pgffor@skip=\dimen167
+\pgffor@stack=\toks31
+\pgffor@toks=\toks32
+))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/frontendla
+yer/tikz\tikz.code.tex"
+Package: tikz 2019/02/02 v3.1.1 (3.1.1)
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/libraries\
+pgflibraryplothandlers.code.tex"
+File: pgflibraryplothandlers.code.tex 2019/02/02 v3.1.1 (3.1.1)
+\pgf@plot@mark@count=\count132
+\pgfplotmarksize=\dimen168
+)
+\tikz@lastx=\dimen169
+\tikz@lasty=\dimen170
+\tikz@lastxsaved=\dimen171
+\tikz@lastysaved=\dimen172
+\tikzleveldistance=\dimen173
+\tikzsiblingdistance=\dimen174
+\tikz@figbox=\box43
+\tikz@figbox@bg=\box44
+\tikz@tempbox=\box45
+\tikz@tempbox@bg=\box46
+\tikztreelevel=\count133
+\tikznumberofchildren=\count134
+\tikznumberofcurrentchild=\count135
+\tikz@fig@count=\count136
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/modules\pg
+fmodulematrix.code.tex"
+File: pgfmodulematrix.code.tex 2019/02/02 v3.1.1 (3.1.1)
+\pgfmatrixcurrentrow=\count137
+\pgfmatrixcurrentcolumn=\count138
+\pgf@matrix@numberofcolumns=\count139
+)
+\tikz@expandcount=\count140
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/frontendla
+yer/tikz/libraries\tikzlibrarytopaths.code.tex"
+File: tikzlibrarytopaths.code.tex 2019/02/02 v3.1.1 (3.1.1)
+)))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots\pgfpl
+ots.code.tex"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots\pgfpl
+otscore.code.tex"
+\t@pgfplots@toka=\toks33
+\t@pgfplots@tokb=\toks34
+\t@pgfplots@tokc=\toks35
+\pgfplots@tmpa=\dimen175
+\c@pgfplots@coordindex=\count141
+\c@pgfplots@scanlineindex=\count142
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots/sys\p
+gfplotssysgeneric.code.tex"))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots/libs\
+pgfplotslibrary.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots/oldpg
+fcompatib\pgfplotsoldpgfsupp_loader.code.tex"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/libraries\
+pgflibraryfpu.code.tex")
+Package pgfplots: loading complementary arithmetics for your pgf version...
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots/oldpg
+fcompatib\pgfplotsoldpgfsupp_pgflibraryfpu.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots/oldpg
+fcompatib\pgfplotsoldpgfsupp_pgfmathfloat.code.tex"
+\c@pgfmathroundto@lastzeros=\count143
+))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots/util\
+pgfplotsutil.code.tex"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots/lists
+tructure\pgfplotsliststructure.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots/lists
+tructure\pgfplotsliststructureext.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots/lists
+tructure\pgfplotsarray.code.tex"
+\c@pgfplotsarray@tmp=\count144
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots/lists
+tructure\pgfplotsmatrix.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots/numta
+ble\pgfplotstableshared.code.tex"
+\c@pgfplotstable@counta=\count145
+\t@pgfplotstable@a=\toks36
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots/lists
+tructure\pgfplotsdeque.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots/util\
+pgfplotsbinary.code.tex"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots/util\
+pgfplotsbinary.data.code.tex"))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots/util\
+pgfplotsutil.verb.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots/libs\
+pgflibrarypgfplots.surfshading.code.tex"
+\c@pgfplotslibrarysurf@no=\count146
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots/sys\p
+gflibrarypgfplots.surfshading.pgfsys-pdftex.def")))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots/util\
+pgfplotscolormap.code.tex"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots/util\
+pgfplotscolor.code.tex"))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots\pgfpl
+otsstackedplots.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots\pgfpl
+otsplothandlers.code.tex"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots\pgfpl
+otsmeshplothandler.code.tex"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots\pgfpl
+otsmeshplotimage.code.tex")))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots\pgfpl
+ots.scaling.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots\pgfpl
+otscoordprocessing.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots\pgfpl
+ots.errorbars.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots\pgfpl
+ots.markers.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots\pgfpl
+otsticks.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgfplots\pgfpl
+ots.paths.code.tex")
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/frontendla
+yer/tikz/libraries\tikzlibrarydecorations.code.tex"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/modules\pg
+fmoduledecorations.code.tex"
+\pgfdecoratedcompleteddistance=\dimen176
+\pgfdecoratedremainingdistance=\dimen177
+\pgfdecoratedinputsegmentcompleteddistance=\dimen178
+\pgfdecoratedinputsegmentremainingdistance=\dimen179
+\pgf@decorate@distancetomove=\dimen180
+\pgf@decorate@repeatstate=\count147
+\pgfdecorationsegmentamplitude=\dimen181
+\pgfdecorationsegmentlength=\dimen182
+)
+\tikz@lib@dec@box=\box47
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/frontendla
+yer/tikz/libraries\tikzlibrarydecorations.pathmorphing.code.tex"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/libraries/
+decorations\pgflibrarydecorations.pathmorphing.code.tex"))
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/frontendla
+yer/tikz/libraries\tikzlibrarydecorations.pathreplacing.code.tex"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/libraries/
+decorations\pgflibrarydecorations.pathreplacing.code.tex"))
+\pgfplots@numplots=\count148
+\pgfplots@xmin@reg=\dimen183
+\pgfplots@xmax@reg=\dimen184
+\pgfplots@ymin@reg=\dimen185
+\pgfplots@ymax@reg=\dimen186
+\pgfplots@zmin@reg=\dimen187
+\pgfplots@zmax@reg=\dimen188
+)
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/frontendla
+yer/tikz/libraries\tikzlibraryplotmarks.code.tex"
+File: tikzlibraryplotmarks.code.tex 2019/02/02 v3.1.1 (3.1.1)
+
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/pgf/libraries\
+pgflibraryplotmarks.code.tex"
+File: pgflibraryplotmarks.code.tex 2019/02/02 v3.1.1 (3.1.1)
+)))
 runsystem(for ^%i in (pygmentize.exe pygmentize.bat pygmentize.cmd) do set > re
 lazione_gpu.aex <nul: /p x=^%~$PATH:i>> relazione_gpu.aex)...executed.
 
@@ -277,44 +717,44 @@ LaTeX Warning: Label `table:1' multiply defined.
 )
 \openout1 = `relazione_gpu.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 43.
+LaTeX Font Info:    ... okay on input line 43.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 43.
+LaTeX Font Info:    ... okay on input line 43.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 43.
+LaTeX Font Info:    ... okay on input line 43.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 43.
+LaTeX Font Info:    ... okay on input line 43.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 43.
+LaTeX Font Info:    ... okay on input line 43.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 43.
+LaTeX Font Info:    ... okay on input line 43.
 
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\context\base\supp-pdf.mk
-ii"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/context/base/mkii\supp
+-pdf.mkii"
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count120
-\scratchdimen=\dimen128
-\scratchbox=\box35
-\nofMPsegments=\count121
-\nofMParguments=\count122
-\everyMPshowfont=\toks21
-\MPscratchCnt=\count123
-\MPscratchDim=\dimen129
-\MPnumerator=\count124
-\makeMPintoPDFobject=\count125
-\everyMPtoPDFconversion=\toks22
+\scratchcounter=\count149
+\scratchdimen=\dimen189
+\scratchbox=\box48
+\nofMPsegments=\count150
+\nofMParguments=\count151
+\everyMPshowfont=\toks37
+\MPscratchCnt=\count152
+\MPscratchDim=\dimen190
+\MPnumerator=\count153
+\makeMPintoPDFobject=\count154
+\everyMPtoPDFconversion=\toks38
 )
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\oberdiek\epstopdf-
-base.sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/oberdiek\epstopd
+f-base.sty"
 Package: epstopdf-base 2016/05/15 v2.6 Base part for package epstopdf
 
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\oberdiek\grfext.st
-y"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/oberdiek\grfext.
+sty"
 Package: grfext 2016/05/16 v1.2 Manage graphics extensions (HO)
 
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\generic\oberdiek\kvdefin
-ekeys.sty"
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/generic/oberdiek\kvdef
+inekeys.sty"
 Package: kvdefinekeys 2016/05/16 v1.4 Define keys (HO)
 ))
 Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
@@ -327,48 +767,54 @@ G,.JBIG2,.JB2,.eps]
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: float package is loaded.
 Package caption Info: End \AtBeginDocument code.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <12> on input line 17.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <8> on input line 17.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 17.
-LaTeX Font Info:    Try loading font information for OMS+cmr on input line 24.
+ ABD: EveryShipout initializing macros
 
-("C:\Users\marti\AppData\Local\Programs\MiKTeX 2.9\tex\latex\base\omscmr.fd"
+Package pgfplots Warning: running in backwards compatibility mode (unsuitable t
+ick labels; missing features). Consider writing \pgfplotsset{compat=1.16} into 
+your preamble.
+ on input line 43.
+
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <12> on input line 45.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <8> on input line 45.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <6> on input line 45.
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 52.
+("C:\Users\Martino\AppData\Local\Programs\MiKTeX 2.9\tex/latex/base\omscmr.fd"
 File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 24.
-
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 52.
 [1
 
-{C:/Users/marti/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}]
-<gauss.png, id=11, 627.09282pt x 222.07968pt>
+{C:/Users/Martino/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}]
+<gauss.png, id=14, 627.09282pt x 222.07968pt>
 File: gauss.png Graphic file (type png)
 <use gauss.png>
-Package pdftex.def Info: gauss.png  used on input line 58.
+Package pdftex.def Info: gauss.png  used on input line 86.
 (pdftex.def)             Requested size: 345.0pt x 122.18147pt.
- [2 <./gauss.png>]
-<matrice.png, id=18, 697.10437pt x 435.87843pt>
+
+[2 <./gauss.png>]
+<matrice.png, id=21, 697.10437pt x 435.87843pt>
 File: matrice.png Graphic file (type png)
 <use matrice.png>
-Package pdftex.def Info: matrice.png  used on input line 72.
+Package pdftex.def Info: matrice.png  used on input line 100.
 (pdftex.def)             Requested size: 345.0pt x 215.71725pt.
  [3 <./matrice.png>]
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 99.
+(Font)              <7> on input line 127.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 99.
+(Font)              <5> on input line 127.
 
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
 [4]
-<profiling.png, id=26, 699.36281pt x 207.77625pt>
+<profiling.png, id=29, 699.36281pt x 207.77625pt>
 File: profiling.png Graphic file (type png)
 <use profiling.png>
-Package pdftex.def Info: profiling.png  used on input line 153.
+Package pdftex.def Info: profiling.png  used on input line 181.
 (pdftex.def)             Requested size: 345.0pt x 102.49922pt.
  [5 <./profiling.png>]
 \openout4 = `relazione_gpu.pyg'.
@@ -381,12 +827,17 @@ E2D920E0.pygtex)
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
 [6]
-<profiling_optimized.png, id=35, 450.18187pt x 202.50656pt>
+<profiling_optimized.png, id=38, 450.18187pt x 202.50656pt>
 File: profiling_optimized.png Graphic file (type png)
 <use profiling_optimized.png>
-Package pdftex.def Info: profiling_optimized.png  used on input line 198.
+Package pdftex.def Info: profiling_optimized.png  used on input line 226.
 (pdftex.def)             Requested size: 345.0pt x 155.19818pt.
- [7 <./profiling_optimized.png>] [8] (relazione_gpu.aux)
+ [7 <./profiling_optimized.png>]
+Overfull \hbox (20.05959pt too wide) in paragraph at lines 270--271
+[][] 
+ []
+
+[8] (relazione_gpu.aux)
 
 LaTeX Warning: There were multiply-defined labels.
 
@@ -394,26 +845,27 @@ runsystem(del relazione_gpu.pyg)...executed.
 
  ) 
 Here is how much of TeX's memory you used:
- 6064 strings out of 492973
- 109104 string characters out of 3126692
- 229381 words of memory out of 3000000
- 9849 multiletter control sequences out of 15000+200000
+ 26160 strings out of 492946
+ 674347 string characters out of 3125379
+ 908711 words of memory out of 3000000
+ 29625 multiletter control sequences out of 15000+200000
  8409 words of font info for 30 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 44i,9n,41p,1146b,289s stack positions out of 5000i,500n,10000p,200000b,50000s
-<C:/Users/marti/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts
-/cm/cmbx10.pfb><C:/Users/marti/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/pu
-blic/amsfonts/cm/cmbx12.pfb><C:/Users/marti/AppData/Local/Programs/MiKTeX 2.9/f
-onts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/marti/AppData/Local/Programs/
-MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/marti/AppData/Loc
-al/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Users/marti
-/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C
-:/Users/marti/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/
-cmti10.pfb><C:/Users/marti/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public
-/amsfonts/cm/cmtt10.pfb>
-Output written on relazione_gpu.pdf (8 pages, 169459 bytes).
+ 62i,17n,96p,1146b,2182s stack positions out of 5000i,500n,10000p,200000b,50000s
+<C:/Users/Martino/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfon
+ts/cm/cmbx10.pfb><C:/Users/Martino/AppData/Local/Programs/MiKTeX 2.9/fonts/type
+1/public/amsfonts/cm/cmbx12.pfb><C:/Users/Martino/AppData/Local/Programs/MiKTeX
+ 2.9/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/Martino/AppData/Local/
+Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/Martino/
+AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/
+Users/Martino/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/
+cmr17.pfb><C:/Users/Martino/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/publi
+c/amsfonts/cm/cmsy10.pfb><C:/Users/Martino/AppData/Local/Programs/MiKTeX 2.9/fo
+nts/type1/public/amsfonts/cm/cmti10.pfb><C:/Users/Martino/AppData/Local/Program
+s/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
+Output written on relazione_gpu.pdf (8 pages, 178672 bytes).
 PDF statistics:
- 70 PDF objects out of 1000 (max. 8388607)
+ 77 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
- 21 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 33 words of extra memory for PDF output out of 10000 (max. 10000000)
 

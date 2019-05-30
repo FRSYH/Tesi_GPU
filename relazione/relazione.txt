@@ -51,3 +51,18 @@ per mantenere la matrice sempre in memoria globale della GPU evitando continui e
 
 RISULTATI OTTENUTI
 Di seguito si forniscono i risultati ottenuti con le tre diverse teniche: cella, riga, blocco. Non si espone ne si commenta esplicitamente il codice realizzato per brevità e chiarezza. 
+
+
+
+Input M_r,c
+pivot_row = 0
+for all columns c do:
+	x = last_row
+	find first m[x][c] != 0
+	if(x != pivot_row)
+		swap_rows(x,pivot_row)
+	for all rows (r > pivot_row) do:
+		z = m[r][pivot_col] / m[pivot_row][pivot_col]
+		for all columns (k < c) do:
+			m[r][k] = m[r][k] - ( m[pivot_row][k] * z)
+	pivot_colonna++
