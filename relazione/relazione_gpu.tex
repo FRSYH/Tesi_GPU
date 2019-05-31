@@ -3,37 +3,8 @@
 \usepackage{graphicx}
 \usepackage{caption}
 \usepackage{minted}
-
+\usepackage{algorithm2e}
 \usepackage{pgfplots}
-
-\pgfplotstableread[row sep=\\,col sep=&]{
-  letter & freq  \\
-  a      & 11 \\
-  b      & 0  \\
-  c      & 4  \\
-  d      & 3  \\
-  e      & 11 \\
-  f      & 7  \\
-  g      & 1  \\
-  h      & 1  \\
-  i      & 11 \\
-  j      & 5  \\
-  k      & 3  \\
-  l      & 0  \\
-  m      & 2  \\
-  n      & 6  \\
-  o      & 9  \\
-  p      & 3  \\
-  q      & 0  \\
-  r      & 6  \\
-  s      & 4  \\
-  t      & 5  \\
-  u      & 3  \\
-  v      & 2  \\
-  w      & 10 \\
-  x      & 7  \\
-  y      & 11 \\
-  z      & 9  \\     }\alph 
 
 
 \title{Relazione progetto GPU computing}
@@ -268,6 +239,25 @@ E' evidente che l'utilizzo della GPU comporta prestazioni molto più elevate ris
  
 \end{axis}
 \end{tikzpicture}
+
+
+\begin{algorithm}[H]
+\SetAlgoLined
+\KwResult{Matrice a scalini $m \times n$  }
+
+\For{$k = n-1$ \KwTo $1$}{
+	trova la prima riga $r$ tale che $M[r][k] \; != 0$\; 
+	scambia la riga in posizione $r$ con quella in $k$, se necessario\;
+	\For{$i = k+1$ \KwTo $m$}{
+		$x = a_{ik}/a_{kk}$\;
+		\For{$j = 0$ \KwTo $k$}{
+			$a_{ij} = a_{ij} - a_{ik} \times x$		
+		}	
+	}
+}
+ \caption{Eliminazione di Gauss}
+\end{algorithm}
+
 
 
 
