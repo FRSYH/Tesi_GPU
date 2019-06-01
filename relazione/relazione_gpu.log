@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6745 64-bit) (preloaded format=pdflatex 2018.8.21)  31 MAY 2019 11:40
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6745 64-bit) (preloaded format=pdflatex 2018.8.21)  1 JUN 2019 10:01
 entering extended mode
 **./relazione_gpu.tex
 (relazione_gpu.tex
@@ -838,49 +838,44 @@ File: gauss.png Graphic file (type png)
 <use gauss.png>
 Package pdftex.def Info: gauss.png  used on input line 57.
 (pdftex.def)             Requested size: 345.0pt x 122.18147pt.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 66.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 66.
  [2 <./gauss.png>]
 <matrice.png, id=21, 697.10437pt x 435.87843pt>
 File: matrice.png Graphic file (type png)
 <use matrice.png>
-Package pdftex.def Info: matrice.png  used on input line 71.
+Package pdftex.def Info: matrice.png  used on input line 91.
 (pdftex.def)             Requested size: 345.0pt x 215.71725pt.
- [3 <./matrice.png>]
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 98.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 98.
-
+ [3] [4 <./matrice.png>]
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
-[4]
-<profiling.png, id=29, 699.36281pt x 207.77625pt>
+[5]
+<profiling.png, id=35, 699.36281pt x 207.77625pt>
 File: profiling.png Graphic file (type png)
 <use profiling.png>
-Package pdftex.def Info: profiling.png  used on input line 152.
+Package pdftex.def Info: profiling.png  used on input line 172.
 (pdftex.def)             Requested size: 345.0pt x 102.49922pt.
- [5 <./profiling.png>]
+ [6 <./profiling.png>]
 \openout4 = `relazione_gpu.pyg'.
 
  (_minted-relazione_gpu/default-pyg-prefix.pygstyle)
 (_minted-relazione_gpu/default.pygstyle)
 (_minted-relazione_gpu/A27881BD79FFDE4571FB980D9C590F6CE357F23152D583BA4AAC82AB
-E2D920E0.pygtex)
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
-
-[6]
-<profiling_optimized.png, id=38, 450.18187pt x 202.50656pt>
+E2D920E0.pygtex) [7]
+<profiling_optimized.png, id=45, 450.18187pt x 202.50656pt>
 File: profiling_optimized.png Graphic file (type png)
 <use profiling_optimized.png>
-Package pdftex.def Info: profiling_optimized.png  used on input line 197.
+Package pdftex.def Info: profiling_optimized.png  used on input line 218.
 (pdftex.def)             Requested size: 345.0pt x 155.19818pt.
- [7 <./profiling_optimized.png>]
-Overfull \hbox (20.05959pt too wide) in paragraph at lines 241--242
+ [8 <./profiling_optimized.png>]
+Overfull \hbox (20.05959pt too wide) in paragraph at lines 262--263
 [][] 
  []
 
-[8] (relazione_gpu.aux)
+[9] (relazione_gpu.aux)
 
 LaTeX Warning: There were multiply-defined labels.
 
@@ -888,28 +883,29 @@ runsystem(del relazione_gpu.pyg)...executed.
 
  ) 
 Here is how much of TeX's memory you used:
- 26635 strings out of 492973
- 679356 string characters out of 3126692
- 924494 words of memory out of 3000000
- 30064 multiletter control sequences out of 15000+200000
- 8409 words of font info for 30 fonts, out of 3000000 for 9000
+ 26637 strings out of 492973
+ 679375 string characters out of 3126692
+ 924516 words of memory out of 3000000
+ 30065 multiletter control sequences out of 15000+200000
+ 8719 words of font info for 31 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 62i,17n,96p,1146b,2144s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 62i,18n,96p,1245b,2144s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Users/marti/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts
 /cm/cmbx10.pfb><C:/Users/marti/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/pu
 blic/amsfonts/cm/cmbx12.pfb><C:/Users/marti/AppData/Local/Programs/MiKTeX 2.9/f
-onts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/marti/AppData/Local/Programs
-/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/marti/AppData/Lo
-cal/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/mart
-i/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr12.pfb><C
+onts/type1/public/amsfonts/cm/cmbx7.pfb><C:/Users/marti/AppData/Local/Programs/
+MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/marti/AppData/Lo
+cal/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/mart
+i/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb><C
 :/Users/marti/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/
-cmr17.pfb><C:/Users/marti/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/
-amsfonts/cm/cmsy10.pfb><C:/Users/marti/AppData/Local/Programs/MiKTeX 2.9/fonts/
-type1/public/amsfonts/cm/cmti10.pfb><C:/Users/marti/AppData/Local/Programs/MiKT
-eX 2.9/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
-Output written on relazione_gpu.pdf (8 pages, 192894 bytes).
+cmr12.pfb><C:/Users/marti/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/
+amsfonts/cm/cmr17.pfb><C:/Users/marti/AppData/Local/Programs/MiKTeX 2.9/fonts/t
+ype1/public/amsfonts/cm/cmsy10.pfb><C:/Users/marti/AppData/Local/Programs/MiKTe
+X 2.9/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Users/marti/AppData/Local/P
+rograms/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
+Output written on relazione_gpu.pdf (9 pages, 203338 bytes).
 PDF statistics:
- 81 PDF objects out of 1000 (max. 8388607)
+ 88 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  33 words of extra memory for PDF output out of 10000 (max. 10000000)
 
