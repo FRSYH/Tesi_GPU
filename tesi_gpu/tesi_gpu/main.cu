@@ -13,8 +13,6 @@
 #include "utility.h"
 #include "utility_cuda.cuh"
 
-// compilazione nvcc gm.cu -o gm -w -Xcompiler " -openmp"
-// nvcc gm.cu -o gm -w -Xcompiler " -openmp" -gencode arch=compute_61,code=sm_61 -lcudadevrt -rdc=true
 
 __device__ int next_pivot_row = 0;
 
@@ -133,7 +131,7 @@ __global__ void submatrix_reduction_by_row(int *matrix, int row, int col, int mo
 	}
 }
 
-__global__ void gaussian_reduction_by_row(int *matrix, int row, int col, int module, int dim) {
+__global__ void gaussian_reduction_by_row(int *matrix, int row, int col, int module) {
 
 	int pivot_row = 0, r = 0, rows_found = 0;
 	int inv;
@@ -236,7 +234,7 @@ __global__ void submatrix_reduction_by_block(int *matrix, int row, int col, int 
 }
 
 
-__global__ void gaussian_reduction_by_block(int *matrix, int row, int col, int module, int dim) {
+__global__ void gaussian_reduction_by_block(int *matrix, int row, int col, int module) {
 
 	int pivot_row = 0, r = 0, rows_found = 0;
 	int inv;
@@ -247,7 +245,7 @@ __global__ void gaussian_reduction_by_block(int *matrix, int row, int col, int m
 	for (int pivot_col = col - 1; pivot_col >= 0; pivot_col--) {
 		r = rows_found;
 		///////////////////////////FIND PIVOT///////////////////////////////////////////////
-		block_dim = 256;
+		block_dim = 256;	//base 256
 		int row_to_check = row - rows_found;
 		threads_per_block = (row_to_check < block_dim ? row_to_check : block_dim);
 		dim3 t_find(threads_per_block);
@@ -267,7 +265,7 @@ __global__ void gaussian_reduction_by_block(int *matrix, int row, int col, int m
 		if (r < row) {
 			if (r != rows_found) {
 				////////////////////////SWAP ROWS////////////////////////////////////////////////////////
-				block_dim = 256;
+				block_dim = 256;	//base 256
 				threads_per_block = (col < block_dim ? col : block_dim);
 				dim3 t_swap(threads_per_block);
 
@@ -289,7 +287,7 @@ __global__ void gaussian_reduction_by_block(int *matrix, int row, int col, int m
 
 			inv = invers_GPU(matrix[pivot_row*col + pivot_col], module);
 			////////////////////////////////////////REDUCTION BY BLOCK////////////////////////////////////
-			block_dim = 128;
+			block_dim = 128;	//base 128
 			int col_to_reduce = pivot_col;
 			threads_per_block = (col_to_reduce < block_dim ? col_to_reduce : block_dim);
 			dim3 threads(threads_per_block);
@@ -301,27 +299,27 @@ __global__ void gaussian_reduction_by_block(int *matrix, int row, int col, int m
 				block_x_axis = 1;
 			}
 
-			int thread_height = 256;
+			int thread_height = 32;	//base 256
 			int row_to_reduce = row - rows_found;
 			block_y_axis = (row_to_reduce / thread_height) + 1;
 
 			dim3 blocks(block_x_axis, block_y_axis);
 
 			int shared = (block_dim * sizeof(int)) + (thread_height * sizeof(int));
-			submatrix_reduction_by_block << <blocks, threads, shared >> >(matrix, row, col, module, pivot_col, inv, pivot_row, thread_height, block_dim);
+			submatrix_reduction_by_block <<<blocks, threads, shared>>>(matrix, row, col, module, pivot_col, inv, pivot_row, thread_height, block_dim);
 			cudaDeviceSynchronize();
 			//////////////////////////////////////////////////////////////////////////////////////////
 
 			///////////////////////////////RESET PIVOT COL////////////////////////////////////////
-			thread_height = 100;
-			block_dim = 32;
+			thread_height = 50;	//base 100
+			block_dim = 32;			//base 32
 			row_to_reduce = row - pivot_row;
 			threads_per_block = (row_to_reduce < thread_height ? 1 : block_dim);
 			block_x_axis = (threads_per_block == block_dim && row_to_reduce != block_dim) ? (row_to_reduce / (thread_height*block_dim) + 1) : 1;
 			dim3 t(threads_per_block);
 			dim3 b(block_x_axis);
 
-			reset_pivot_col << <b, t >> >(matrix, row, col, pivot_row, pivot_col, thread_height, block_dim);
+			reset_pivot_col <<<b, t >>>(matrix, row, col, pivot_row, pivot_col, thread_height, block_dim);
 			cudaDeviceSynchronize();
 			//////////////////////////////////////////////////////////////////////////////////////
 		}
@@ -339,7 +337,7 @@ double gauss_CUDA(int *m, int row, int col, int module) {
 	gpuErrchk(cudaMalloc((void **)&m_d, matrix_length_bytes));
 	gpuErrchk(cudaMemcpy(m_d, m, matrix_length_bytes, cudaMemcpyHostToDevice));
 	start = clock();
-	gaussian_reduction_by_block<<<1, 1>>>(m_d, row, col, module, row*col);
+	gaussian_reduction_by_block<<<1, 1>>>(m_d, row, col, module);
 	gpuErrchk(cudaDeviceSynchronize());
 	gpuErrchk(cudaMemcpy(m, m_d, matrix_length_bytes, cudaMemcpyDeviceToHost));
 

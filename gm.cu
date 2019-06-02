@@ -1211,7 +1211,7 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module){
 				block_x_axis = 1;
 			}
 
-			int thread_height = 256;
+			int thread_height = 32;
 			int row_to_reduce = row - righe_trovate;
 			block_y_axis = (row_to_reduce / thread_height) + 1;
 
@@ -1223,7 +1223,7 @@ __global__ void gauss_kernel_blocco(int *matrix, int row, int col, int module){
 			//////////////////////////////////////////////////////////////////////////////////////////
 
 			///////////////////////////////RESET PIVOT COL////////////////////////////////////////
-			thread_height = 100;
+			thread_height = 50;
 			block_dim = 32;
 			row_to_reduce = row-pivot_riga;
 			threads_per_block = (row_to_reduce < thread_height ? 1 : block_dim);
@@ -1452,7 +1452,7 @@ double gauss_GPU(int *m, int row, int col, int module){
 
 	start = clock();
 
-	gauss_kernel_blocco_base<<<1,1>>>(m_d, row, col, module);
+	gauss_kernel_blocco<<<1,1>>>(m_d, row, col, module);
 	gpuErrchk(cudaDeviceSynchronize());
 	gpuErrchk(cudaMemcpy(m, m_d, matrix_length_bytes, cudaMemcpyDeviceToHost));
 
