@@ -1331,21 +1331,9 @@ __global__ void gauss_kernel_righe(int *matrix, int row, int col, int module){
 		cudaDeviceSynchronize();
 		r = next_pivot_row;
 ///////////////////////////////////
-		/*
-		while( r < row && matrix[r*col+pivot_colonna] == 0 ){   //m[r][pivot_colonna]
-			r++;
-			
-		}
-		// ho trovato la prima riga con elemento non nullo in posizione r e pivot_colonna oppure non esiste nessuna riga con elemento non nullo in posizione pivot_colonna
-		*/
-
 		if( r < row ){ //significa che ho trovato un valore non nullo
 			
 			if( r != righe_trovate ){
-				/*
-				swap_rows_GPU(matrix,row,col,righe_trovate,r); //sposto la riga appena trovata nella posizone corretta
-				flag = 1;
-				*/
 				block_dim = 256;
 				threads_per_block = ( col < block_dim ? col : block_dim);
 				dim3 t_swap(threads_per_block);
@@ -1452,7 +1440,7 @@ double gauss_GPU(int *m, int row, int col, int module){
 
 	start = clock();
 
-	gauss_kernel_blocco<<<1,1>>>(m_d, row, col, module);
+	gauss_kernel_righe_base<<<1,1>>>(m_d, row, col, module);
 	gpuErrchk(cudaDeviceSynchronize());
 	gpuErrchk(cudaMemcpy(m, m_d, matrix_length_bytes, cudaMemcpyDeviceToHost));
 

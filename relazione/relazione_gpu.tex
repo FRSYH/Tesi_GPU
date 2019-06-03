@@ -5,7 +5,7 @@
 \usepackage{minted}
 \usepackage[ruled,linesnumbered]{algorithm2e}
 \usepackage{pgfplots}
-
+\usepackage[obeyspaces]{url}
 
 \title{Relazione progetto GPU computing}
 \author{Martino Tiziani}
@@ -264,5 +264,9 @@ E' evidente che l'utilizzo della GPU comporta prestazioni molto più elevate ris
  
 \end{axis}
 \end{tikzpicture}
+
+\section{Contenuto progetto}
+Il codice è stato realizzato come progetto visual studio, la soluzione è reperibile in \path{Progetto GPU\tesi_gpu\progetto_gpu.sln}. Mentre i file sorgente sono singolarmente reperibili in \path{Progetto GPU\tesi_gpu\tesi_gpu}, le tre tecniche sviluppate sono presenti nel file \path{main.cu}. La directory \path{input} contiene i sistemi di input descritti nella sezione 5. La directory \path{output} contiene gli output delle varie tecniche di risoluzione per tutti gli input presenti. La directory \path{profiling} contiene le sessioni del visual profiler di CUDA e alcune metriche sulla migliore soluzione trovata.
+
 
 \end{document}

@@ -134,19 +134,42 @@ __global__ void submatrix_reduction_by_row(int *matrix, int row, int col, int mo
 __global__ void gaussian_reduction_by_row(int *matrix, int row, int col, int module) {
 
 	int pivot_row = 0, r = 0, rows_found = 0;
-	int inv;
+	int inv, block_dim, threads_per_block, block_x_axis;
 
 	for (int pivot_col = col - 1; pivot_col >= 0; pivot_col--) {
 		r = rows_found;
-		while (r < row && matrix[r*col + pivot_col] == 0) {   //m[r][pivot_colonna]
-			r++;
+		block_dim = 256;
+		int row_to_check = row - rows_found;
+		threads_per_block = (row_to_check < block_dim ? row_to_check : block_dim);
+		dim3 t_find(threads_per_block);
 
+		if (threads_per_block == block_dim && row_to_check != block_dim) {
+			block_x_axis = (row_to_check / block_dim) + 1;
 		}
-		// ho trovato la prima riga con elemento non nullo in posizione r e pivot_colonna oppure non esiste nessuna riga con elemento non nullo in posizione pivot_colonna
-
-		if (r < row) { //significa che ho trovato un valore non nullo
+		else {
+			block_x_axis = 1;
+		}
+		dim3 b_find(block_x_axis);
+		next_pivot_row = row;
+		find_pivot << <b_find, t_find >> > (matrix, row, col, r, pivot_col);
+		cudaDeviceSynchronize();
+		r = next_pivot_row;
+		if (r < row) {
 			if (r != rows_found) {
-				swap_rows_GPU(matrix, row, col, rows_found, r); //sposto la riga appena trovata nella posizone corretta
+				block_dim = 256;
+				threads_per_block = (col < block_dim ? col : block_dim);
+				dim3 t_swap(threads_per_block);
+
+				if (threads_per_block == block_dim && col != block_dim) {
+					block_x_axis = (col / block_dim) + 1;
+				}
+				else {
+					block_x_axis = 1;
+				}
+				dim3 b_swap(block_x_axis);
+				//sposto la riga appena trovata nella posizone corretta
+				swap_rows << <b_swap, t_swap >> > (matrix, row, col, rows_found, r);
+				cudaDeviceSynchronize();
 			}
 			pivot_row = rows_found;
 			rows_found++;
@@ -337,7 +360,7 @@ double gauss_CUDA(int *m, int row, int col, int module) {
 	gpuErrchk(cudaMalloc((void **)&m_d, matrix_length_bytes));
 	gpuErrchk(cudaMemcpy(m_d, m, matrix_length_bytes, cudaMemcpyHostToDevice));
 	start = clock();
-	gaussian_reduction_by_block<<<1, 1>>>(m_d, row, col, module);
+	gaussian_reduction_by_row<<<1, 1>>>(m_d, row, col, module);
 	gpuErrchk(cudaDeviceSynchronize());
 	gpuErrchk(cudaMemcpy(m, m_d, matrix_length_bytes, cudaMemcpyDeviceToHost));
 
@@ -347,11 +370,11 @@ double gauss_CUDA(int *m, int row, int col, int module) {
 	return elapsed;
 }
 
-void execute_standard(int **matrix, int * row, int col, struct map map, int *degree, int **monomi, int numero_variabili, int n_loops, int expansion, FILE *output_file) {
+void resolve_system(int **matrix, int * row, int col, struct map map, int *degree, int **monomi, int numero_variabili, int n_loops, int expansion, FILE *output_file) {
 
+	///////////////////////////// INIZIALIZZAZIONE STRUTTURE DI SUPPORTO ////////////////////////////
 	clock_t start, end;
 	double elapsed;
-
 	//creo l'array che conterrà i gradi dei vari round
 	int **m_deg_array = (int **)malloc(sizeof(int*));
 	m_deg_array[0] = (int *)calloc(max_degree + 1, sizeof(int));
@@ -360,15 +383,14 @@ void execute_standard(int **matrix, int * row, int col, struct map map, int *deg
 	int missing_degree = max_degree;
 	fprintf(output_file, "Inizio computazione, metodo standard\n");
 	matrix_degree(*matrix, *row, col, m_deg, monomi, numero_variabili);
-
+	///////////////////////////////////////////////////////////////////////////////////////
 	int stop = 0;
 
 	while (stop != 1) {
+		
 		n_round++;
-
 		fprintf(output_file, "\n -Eseguo moltiplicazione, ");
 		fflush(stdout);
-
 		start = clock();
 
 		//find missing degree to multiply matrix
@@ -378,38 +400,32 @@ void execute_standard(int **matrix, int * row, int col, struct map map, int *deg
 				break;
 			}
 		}
-
+		/////////////// ESPANSIONE SISTEMA ////////////////////////////////
 		moltiplica_matrice(matrix, row, col, map, degree, monomi, numero_variabili, missing_degree, max_degree);
-
+		//////////////////////////////////////////////////////////////////
 		end = clock();
 		elapsed = ((double)(end - start)) / CLOCKS_PER_SEC;
 		fprintf(output_file, "numero righe: %d     (%f sec)", *row, elapsed);
 
 		fprintf(output_file, "\n -Eseguo Gauss, ");
 		fflush(stdout);
-		//start = clock();
 
-		//applico la riduzione di Gauss
+		///////////////////// RIDUZIONE SISTEMA //////////////////////////////
 		elapsed = gauss_CUDA(*matrix, *row, col, module);
 		//elimino le righe nulle della matrice
 		eliminate_null_rows(matrix, row, col);
 
-		//aggiungo all'array i gradi dell'attuale round
-		//n_round+1 perchè salvo anche i gradi prima di inziare i round
 		m_deg_array = (int **)realloc(m_deg_array, sizeof(int*)*(n_round + 1));
 		m_deg_array[n_round] = (int *)calloc(max_degree + 1, sizeof(int));
 		m_deg = m_deg_array[n_round];
-
-		//end = clock();
-		//elapsed =  ((double)(end - start)) / CLOCKS_PER_SEC;
+		/////////////////////////////////////////////////////////////////////
+		
+		//////////////// CALCOLO GRADI MANCANTI /////////////////////////////
 		fprintf(output_file, "numero righe: %d               (%f sec)\n", *row, elapsed);
-
 		matrix_degree(*matrix, *row, col, m_deg, monomi, numero_variabili);
 		print_matrix_degree(m_deg, output_file, max_degree);
-
 		if (target_degree(m_deg, max_degree) == 0)
 			stop = 1;
-
 	}
 	for (int i = 0; i < n_round + 1; i++)
 		free(m_deg_array[i]);
@@ -419,8 +435,8 @@ void execute_standard(int **matrix, int * row, int col, struct map map, int *deg
 
 int main(int argc, char *argv[]) {
 
+	/////////////////////// INIZIALIZZAZIONE ////////////////////////////////////////////
 	FILE *input_file = NULL, *output_file = NULL;
-	//inizializzo flag a false
 
 	for (int parsed = 1; parsed < argc; parsed++) {
 		if (parsed < argc && !strcmp(argv[parsed], "--input")) {
@@ -457,8 +473,9 @@ int main(int argc, char *argv[]) {
 	clock_t start, end;
 	double elapsed = 0.0;
 	start = clock();
+	//////////////////////////////////////////////////////////////////////////////////////
 
-	//alloca la matrice principale, legge da input: il modulo,massimo grado e numero variabili
+	/////////////////////////////////////////// ALLOCAZIONE STRUTTURE DI SUPPORTO ///////////////////////////////////////////
 	allocation(&matrix, &row, &col, &numero_variabili, &variabili, &tipo_ordinamento, &module, &max_degree, input_file);
 
 	if (order(&ord, tipo_ordinamento) != 0) {
@@ -495,7 +512,7 @@ int main(int argc, char *argv[]) {
 	elapsed = ((double)(end - start)) / CLOCKS_PER_SEC;
 	fprintf(output_file, "\nMappa creata in %f sec,   %d x %d \n\n", elapsed, col, col);
 
-	//RISOLUZIONE PROBLEMA
+	/////////////////////////// RISOLUZIONE SISTEMA ////////////////////////////////////////////////
 	start = clock();
 
 	//inizializzazione vettore dei gradi dei polinomi
@@ -503,13 +520,12 @@ int main(int argc, char *argv[]) {
 
 	int n_loops = 30, expansion = 1;
 	//eseguo moltiplicazione e riduzione di Gauss finche non trovo soluzione
-	execute_standard(&matrix, &row, col, smap, degree, monomi, numero_variabili, n_loops, expansion, output_file);
+	resolve_system(&matrix, &row, col, smap, degree, monomi, numero_variabili, n_loops, expansion, output_file);
 
 	end = clock();
 	elapsed = ((double)(end - start)) / CLOCKS_PER_SEC;
 	fprintf(output_file, "\nTarget raggiunto, soluzione trovata in %f sec\n\n", elapsed);
-
-	//print_matrix(matrix, row, col, output_file);
+	/////////////////////////////////////////////////////////////////////////////////////////////
 	print_incognite(matrix, row, col, numero_variabili, monomi, output_file);
 
 	free(matrix);
