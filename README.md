@@ -7,13 +7,13 @@ CUDA implementation of Tesi (https://github.com/FRSYH/Tesi)
 * profiling -> Profiling dell'applicazione, uso del visual profiler di Nvidia
 * relazione -> Relazione del progetto ([relazione](relazione/relazione_gpu.pdf)) 
 
+
+
+
+
+
+
 [working_dir](#working_dir)
-
-
-
-
-
-
 
 
 
@@ -102,6 +102,8 @@ a
 a
 
 
+### <a name="working_dir"></a> -w --working_dir ###
+Set the `WORKING_DIR` variable with the tree_automator repository absolute path
 
 
 
@@ -124,10 +126,3 @@ a
 
 
 
-
-
-
-
-
-
-<h3 id="working_dir">-w --working_dir</h3>
